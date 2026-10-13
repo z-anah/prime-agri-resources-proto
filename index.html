@@ -39,7 +39,7 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center text-slate-800 antialiased p-6">
   <div id="app" class="w-full max-w-5xl bg-white rounded-2xl shadow-sm overflow-hidden border border-card-border p-8">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       <div v-for="project in projects" :key="project.id" class="flex flex-col justify-between">
         <div>
           <div class="flex items-center space-x-3 mb-4">
@@ -66,23 +66,29 @@
         return {
           projects: [
             {
+              id: 'overview',
+              name: 'Overview',
+              links: [
+                { label: 'Estate Ops Plantation Overview (Total Only)', url: 'estate/estate-ops-plantation-overview-total-only.html' },
+                { label: 'Plantation Production Overview (Estate)', url: 'estate/plantation-production-overview-estate.html' },
+                { label: 'Plantation Production Overview (Mill)', url: 'estate/plantation-production-overview-mill.html' }
+              ]
+            },
+            {
               id: 'mill',
-              name: 'Mill Project',
+              name: 'Mill',
               links: [
                 { label: 'Mill Operation Dashboard', url: 'mill/index.html' }
               ]
             },
             {
               id: 'estate',
-              name: 'Estate Project',
+              name: 'Estate',
               links: [
                 { label: 'Estate Ops Fertilizer Area', url: 'estate/estate-ops-fertilizer-area.html' },
                 { label: 'Estate Ops Fertilizer Estate', url: 'estate/estate-ops-fertilizer-estate.html' },
-                { label: 'Estate Ops Plantation Overview (Total Only)', url: 'estate/estate-ops-plantation-overview-total-only.html' },
                 { label: 'Estate Ops Production Area', url: 'estate/estate-ops-production-area.html' },
                 { label: 'Estate Ops Production Estate', url: 'estate/estate-ops-production-estate.html' },
-                { label: 'Plantation Production Overview (Estate)', url: 'estate/plantation-production-overview-estate.html' },
-                { label: 'Plantation Production Overview (Mill)', url: 'estate/plantation-production-overview-mill.html' }
               ]
             }
           ]
