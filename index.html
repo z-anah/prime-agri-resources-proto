@@ -40,34 +40,16 @@
 <body class="min-h-screen flex flex-col items-center justify-center text-slate-800 antialiased p-6">
   <div id="app" class="w-full max-w-5xl bg-white rounded-2xl shadow-sm overflow-hidden border border-card-border p-8">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <!-- Project 1: Mill -->
-      <div class="p-6 flex flex-col justify-between">
+      <div v-for="project in projects" :key="project.id" class="flex flex-col justify-between">
         <div>
           <div class="flex items-center space-x-3 mb-4">
             <div>
-              <h2 class="text-lg font-black text-prime-deep">{{ projects[0].name }}</h2>
+              <h2 class="text-lg font-black text-prime-deep">{{ project.name }}</h2>
             </div>
           </div>
           <div class="space-y-2 mb-6">
-            <a v-for="link in projects[0].links" :key="link.url" :href="link.url" class="flex items-center justify-between p-3 rounded-lg bg-white border border-card-border hover:border-prime-green transition group">
+            <a v-for="link in project.links" :key="link.url" :href="link.url" class="flex items-center justify-between p-1.5 rounded-lg bg-white border border-card-border hover:border-prime-green transition group">
               <span class="text-xs font-bold text-slate-700 group-hover:text-prime-green">{{ link.label }}</span>
-              <i class="fas fa-arrow-right text-xs text-slate-sub group-hover:text-prime-green"></i>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Project 2: Estate -->
-      <div class="p-6 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center space-x-3 mb-4">
-            <div>
-              <h2 class="text-lg font-black text-prime-deep">{{ projects[1].name }}</h2>
-            </div>
-          </div>
-          <div class="space-y-2 mb-6 max-h-56 overflow-y-auto pr-1">
-            <a v-for="link in projects[1].links" :key="link.url" :href="link.url" class="flex items-center justify-between p-2.5 rounded-lg bg-white border border-card-border hover:border-prime-green transition group">
-              <span class="text-xs font-bold text-slate-700 group-hover:text-prime-green truncate">{{ link.label }}</span>
               <i class="fas fa-arrow-right text-xs text-slate-sub group-hover:text-prime-green"></i>
             </a>
           </div>
