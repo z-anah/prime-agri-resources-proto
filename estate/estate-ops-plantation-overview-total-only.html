@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Plantation Production Overview</title>
+<style>
+  :root{
+    --accent-900:#00463e;
+    --accent-700:#006d65;
+    --accent-600:#00897e;
+    --accent-500:#00a89a;
+    --accent-400:#00c4b0;
+    --accent-300:#00d0bc;
+    --accent-200:#cfefea;
+    --surface-tint:#e3f5f2;
+    --surface-tint-strong:#c7ece6;
+    --neutral-50:#f6f7f7;
+    --neutral-0:#ffffff;
+    --ink-900:#16231f;
+    --ink-600:#3d4c48;
+    --ink-500:#5b6b67;
+    --line:#dce3e1;
+    --line-strong:#c3cdca;
+    --good:#2e9e5b;
+    --good-bg:#e4f4ea;
+    --warn:#b9791c;
+    --warn-bg:#faf1de;
+    --critical:#c3473b;
+    --critical-bg:#fbe9e7;
+    --page-bg:#eef1f0;
+    --estate-tint:#e2f8f3;
+    --mill-tint:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;background:var(--page-bg);color:var(--ink-900);
+    font-family:"Roboto","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .mono{font-family:ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:-0.01em;}
+
+  .canvas{width:1600px;height:900px;overflow:hidden;background:var(--neutral-50);border:1px solid var(--line-strong);padding:14px;display:flex;flex-direction:column;gap:9px;}
+
+  .topbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:9px 16px;border-radius:10px;color:#fff;background:var(--accent-600);}
+  .topbar h1{font-size:15px;margin:0;font-weight:700;letter-spacing:0.01em;}
+  .topbar .eyebrow{font-size:9.5px;text-transform:uppercase;letter-spacing:0.1em;opacity:0.85;font-weight:600;margin-bottom:1px;display:block;}
+  .topbar-brand{display:flex;align-items:center;gap:14px;}
+  .topbar-logo{background:var(--neutral-0);border-radius:7px;padding:6px 10px;display:flex;align-items:center;flex:0 0 auto;}
+  .topbar-logo img{height:22px;width:auto;display:block;}
+  .topbar-meta{display:flex;gap:16px;align-items:center;}
+  .topbar-meta .stat{text-align:right;}
+  .topbar-meta .stat .v{font-size:12.5px;}
+  .topbar-meta .stat .l{font-size:8.5px;text-transform:uppercase;letter-spacing:0.07em;opacity:0.85;}
+
+  .page-title{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:2px 2px 0;}
+  .page-title h2{font-size:13px;margin:0;font-weight:700;color:var(--ink-900);}
+  .page-title .asof{font-size:9.5px;color:var(--ink-500);font-weight:700;}
+
+  .group-header-row{flex:0 0 auto;display:grid;grid-template-columns:90px repeat(4,1fr);gap:9px;}
+  .group-label{font-size:10.5px;}
+  .group-label.estate{grid-column:2;text-align:center;font-weight:700;color:var(--ink-500);text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid var(--accent-600);padding-bottom:4px;}
+  .group-label.mill{grid-column:3 / 6;text-align:center;font-weight:700;color:var(--ink-500);text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid var(--accent-600);padding-bottom:4px;}
+
+  .kpi-grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:90px repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:9px;}
+  .row-label{display:flex;align-items:center;justify-content:flex-end;padding-right:9px;font-size:11.5px;font-weight:700;color:var(--ink-500);text-transform:uppercase;letter-spacing:0.05em;border-right:2px solid var(--accent-600);}
+
+  .ov-card{background:var(--neutral-0);border:1px solid var(--line);border-radius:10px;box-shadow:5px 7px 10px -2px rgba(15,23,42,0.30);padding:9px 12px;display:flex;flex-direction:column;gap:6px;min-height:0;}
+  .ov-card.estate-card{background:var(--estate-tint);}
+  .ov-card.mill-card{background:var(--mill-tint);}
+  .ov-card .oc-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px;}
+  .ov-card .oc-title{font-size:14px;font-weight:700;color:var(--ink-900);}
+  .ov-card .oc-period{font-size:11px;color:var(--ink-500);font-weight:700;}
+
+  .oc-total-big{flex:1 1 auto;display:flex;align-items:center;justify-content:center;}
+  .oc-total-value-big{font-size:32px;font-weight:700;color:var(--ink-900);}
+  .oc-total-deltas-big{display:flex;justify-content:center;gap:16px;padding-top:6px;border-top:1px solid var(--line);}
+  .oc-delta{font-size:12.5px;font-weight:700;white-space:nowrap;}
+  .oc-delta.up{color:var(--good);}
+  .oc-delta.down{color:var(--critical);}
+
+  .statusbar-panel{flex:0 0 auto;background:var(--neutral-0);border:1px solid var(--line);border-radius:10px;padding:6px 14px;}
+  .statusbar{display:flex;align-items:center;}
+  .status-item{display:flex;align-items:center;gap:5px;font-size:9.5px;color:var(--ink-500);}
+  .dot{width:6px;height:6px;border-radius:50%;}
+  .dot.good{background:var(--good);}
+</style>
+</head>
+<body>
+
+<div class="canvas">
+
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo"><img src="primeagri.png" alt="Prime Agri Resources"></div>
+      <div>
+        <span class="eyebrow">POES &middot; Plantation</span>
+        <h1>Plantation Production Overview</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-title">
+    <h2>FFB Production (Estate) &middot; FFB Processed / OER / KER (Mill)</h2>
+    <span class="asof">Data as of 17 Mar 2026</span>
+  </div>
+
+  <div class="group-header-row">
+    <div></div>
+    <div class="group-label estate">Estate</div>
+    <div class="group-label mill">Mill</div>
+  </div>
+
+  <div class="kpi-grid">
+    <!-- Daily row -->
+    <div class="row-label">Daily</div>
+    <div class="ov-card estate-card">
+      <div class="oc-head"><span class="oc-title">FFB Production</span></div>
+      <span class="oc-period">17 Mar 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">9,382</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta up">&#9650; 8.7% vs. kemarin</span>
+          <span class="oc-delta up">&#9650; 12.1% vs. 17 Mar 2025</span>
+      </div>
+    </div>
+    <div class="ov-card mill-card">
+      <div class="oc-head"><span class="oc-title">FFB Processed</span></div>
+      <span class="oc-period">17 Mar 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">19,382</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta up">&#9650; 5.7% vs. kemarin</span>
+          <span class="oc-delta up">&#9650; 7.9% vs. 17 Mar 2025</span>
+      </div>
+    </div>
+    <div class="ov-card mill-card">
+      <div class="oc-head"><span class="oc-title">OER</span></div>
+      <span class="oc-period">17 Mar 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">2.15</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta down">&#9660; 2% vs. kemarin</span>
+          <span class="oc-delta down">&#9660; 2.8% vs. 17 Mar 2025</span>
+      </div>
+    </div>
+    <div class="ov-card mill-card">
+      <div class="oc-head"><span class="oc-title">KER</span></div>
+      <span class="oc-period">17 Mar 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">6.21</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta down">&#9660; 1% vs. kemarin</span>
+          <span class="oc-delta down">&#9660; 1.4% vs. 17 Mar 2025</span>
+      </div>
+    </div>
+
+    <!-- Weekly row -->
+    <div class="row-label">Weekly</div>
+    <div class="ov-card estate-card">
+      <div class="oc-head"><span class="oc-title">FFB Production</span></div>
+      <span class="oc-period">11–17 Mar 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">62,430</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta up">&#9650; 11.3% vs. minggu lalu</span>
+          <span class="oc-delta up">&#9650; 15.9% vs. 11–17 Mar 2025</span>
+      </div>
+    </div>
+    <div class="ov-card mill-card">
+      <div class="oc-head"><span class="oc-title">FFB Processed</span></div>
+      <span class="oc-period">11–17 Mar 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">129,740</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta up">&#9650; 3% vs. minggu lalu</span>
+          <span class="oc-delta up">&#9650; 4.2% vs. 11–17 Mar 2025</span>
+      </div>
+    </div>
+    <div class="ov-card mill-card">
+      <div class="oc-head"><span class="oc-title">OER</span></div>
+      <span class="oc-period">11–17 Mar 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">2.22</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta down">&#9660; 0.7% vs. minggu lalu</span>
+          <span class="oc-delta down">&#9660; 0.9% vs. 11–17 Mar 2025</span>
+      </div>
+    </div>
+    <div class="ov-card mill-card">
+      <div class="oc-head"><span class="oc-title">KER</span></div>
+      <span class="oc-period">11–17 Mar 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">5.10</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta down">&#9660; 4% vs. minggu lalu</span>
+          <span class="oc-delta down">&#9660; 5.6% vs. 11–17 Mar 2025</span>
+      </div>
+    </div>
+
+    <!-- Monthly row -->
+    <div class="row-label">Monthly</div>
+    <div class="ov-card estate-card">
+      <div class="oc-head"><span class="oc-title">FFB Production</span></div>
+      <span class="oc-period">Mar 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">267,420</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta up">&#9650; 7.3% vs. bulan lalu</span>
+          <span class="oc-delta up">&#9650; 10.3% vs. Mar 2025</span>
+      </div>
+    </div>
+    <div class="ov-card mill-card">
+      <div class="oc-head"><span class="oc-title">FFB Processed</span></div>
+      <span class="oc-period">Mar 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">551,200</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta up">&#9650; 4.7% vs. bulan lalu</span>
+          <span class="oc-delta up">&#9650; 6.5% vs. Mar 2025</span>
+      </div>
+    </div>
+    <div class="ov-card mill-card">
+      <div class="oc-head"><span class="oc-title">OER</span></div>
+      <span class="oc-period">Mar 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">22.6%</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta up">&#9650; 0% vs. bulan lalu</span>
+          <span class="oc-delta down">&#9660; 0% vs. Mar 2025</span>
+      </div>
+    </div>
+    <div class="ov-card mill-card">
+      <div class="oc-head"><span class="oc-title">KER</span></div>
+      <span class="oc-period">Mar 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">5.4%</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta down">&#9660; 0.7% vs. bulan lalu</span>
+          <span class="oc-delta down">&#9660; 0.9% vs. Mar 2025</span>
+      </div>
+    </div>
+
+    <!-- Yearly row -->
+    <div class="row-label">Yearly</div>
+    <div class="ov-card estate-card">
+      <div class="oc-head"><span class="oc-title">FFB Production</span></div>
+      <span class="oc-period">YTD 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">738,221</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta up">&#9650; 8.9% vs. thn lalu</span>
+          <span class="oc-delta up">&#9650; 7.1% vs. 2 thn lalu</span>
+      </div>
+    </div>
+    <div class="ov-card mill-card">
+      <div class="oc-head"><span class="oc-title">FFB Processed</span></div>
+      <span class="oc-period">YTD 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">1,512,600</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta up">&#9650; 4.7% vs. thn lalu</span>
+          <span class="oc-delta up">&#9650; 3.8% vs. 2 thn lalu</span>
+      </div>
+    </div>
+    <div class="ov-card mill-card">
+      <div class="oc-head"><span class="oc-title">OER</span></div>
+      <span class="oc-period">YTD 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">21.8%</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta down">&#9660; 0.5% vs. thn lalu</span>
+          <span class="oc-delta down">&#9660; 0.4% vs. 2 thn lalu</span>
+      </div>
+    </div>
+    <div class="ov-card mill-card">
+      <div class="oc-head"><span class="oc-title">KER</span></div>
+      <span class="oc-period">YTD 2026</span>
+      <div class="oc-total-big">
+        <span class="oc-total-value-big mono">5.6%</span>
+      </div>
+      <div class="oc-total-deltas-big">
+        <span class="oc-delta down">&#9660; 0.9% vs. thn lalu</span>
+          <span class="oc-delta down">&#9660; 0.7% vs. 2 thn lalu</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar-panel">
+    <div class="statusbar">
+      <div class="status-item"><span class="dot good"></span>Data updated &middot; <span class="mono">17 Mar 2026, 06:42</span></div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

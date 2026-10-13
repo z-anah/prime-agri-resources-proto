@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Overview Estate</title>
+<style>
+  :root{
+    --accent-900:#00463e;  /* PRIME DEEP GREEN - brand, backgrounds */
+    --accent-700:#00564f;
+    --accent-600:#006d65;  /* PRIME GREEN - brand, primary surface */
+    --accent-500:#008e82;
+    --accent-400:#00b3a3;
+    --accent-300:#00d0bc;  /* PRIME MINT - brand, accent */
+    --accent-200:#cfefea;
+    --surface-tint:#e3f5f2;
+    --surface-tint-strong:#c7ece6;
+    --neutral-50:#f6f7f7;
+    --neutral-0:#ffffff;
+    --ink-900:#16231f;
+    --ink-600:#3d4c48;
+    --ink-500:#5b6b67;
+    --line:#dce3e1;
+    --line-strong:#c3cdca;
+    --good:#2e9e5b;
+    --good-bg:#e4f4ea;
+    --warn:#b9791c;
+    --warn-bg:#faf1de;
+    --critical:#c3473b;
+    --critical-bg:#fbe9e7;
+    --page-bg:#eef1f0;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;background:var(--page-bg);color:var(--ink-900);overflow:hidden;
+    font-family:"Roboto","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Liberation Mono",monospace;
+    font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:-0.01em;}
+
+  /* viewport shell: centers + scales the 16:9 design surface */
+  .fit{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+
+  /* Tableau: dashboard canvas, fixed 1600x900 (16:9), scaled to viewport */
+  .canvas{width:1600px;height:900px;flex:0 0 auto;transform-origin:center center;
+    overflow:hidden;background:var(--neutral-50);border:1px solid var(--line-strong);
+    padding:14px;display:flex;flex-direction:column;gap:9px;}
+
+  /* topbar */
+  .topbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:9px 16px;border-radius:10px;color:#fff;background:var(--accent-600);}
+  .topbar h1{font-size:15px;margin:0;font-weight:700;letter-spacing:0.01em;}
+  .topbar .eyebrow{font-size:9.5px;text-transform:uppercase;letter-spacing:0.1em;opacity:0.85;
+    font-weight:600;margin-bottom:1px;display:block;}
+  .topbar-brand{display:flex;align-items:center;gap:14px;}
+  .topbar-logo{background:var(--neutral-0);border-radius:7px;padding:6px 10px;display:flex;
+    align-items:center;flex:0 0 auto;}
+  .topbar-logo img{height:22px;width:auto;display:block;}
+  .topbar-meta{display:flex;gap:16px;align-items:center;}
+  .topbar-meta .stat{text-align:right;}
+  .topbar-meta .stat .v{display:block;font-size:12.5px;line-height:1.25;}
+  .topbar-meta .stat .l{display:block;font-size:8.5px;text-transform:uppercase;letter-spacing:0.07em;opacity:0.85;line-height:1.2;}
+
+  /* drill-path tabs */
+  .crumb-row{flex:0 0 auto;display:flex;align-items:center;justify-content:flex-end;gap:5px;padding:0 2px;}
+  .crumb{height:22px;min-width:88px;padding:0 14px;display:flex;align-items:center;justify-content:center;
+    font-size:10.5px;font-weight:700;letter-spacing:0.01em;white-space:nowrap;border-radius:6px;
+    background:var(--neutral-0);color:var(--ink-500);box-shadow:inset 0 0 0 1px var(--line-strong);}
+  .crumb.active{background:var(--accent-600);color:#fff;box-shadow:none;}
+  .crumb-sep{font-size:12px;font-weight:700;color:var(--line-strong);line-height:1;}
+
+  /* page title */
+  .page-title{flex:0 0 auto;display:flex;align-items:baseline;justify-content:space-between;padding:0 2px;}
+  .page-title h2{font-size:14px;margin:0;font-weight:700;color:var(--ink-900);}
+  .page-title .asof{font-size:10px;color:var(--ink-500);font-weight:700;}
+
+  /* KPI row */
+  .kpi-row{flex:0 0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:9px;}
+  .kpi-wide{background:var(--neutral-0);border:1px solid var(--line);border-radius:10px;overflow:hidden;
+    display:flex;flex-direction:column;box-shadow:5px 7px 10px -2px rgba(15,23,42,0.30);}
+  .kpi-wide-head{padding:9px 11px 3px;color:var(--ink-900);font-size:10.5px;font-weight:700;}
+  .kpi-wide-head .period{display:block;font-size:9px;color:var(--ink-500);font-weight:700;margin-top:2px;}
+  .kpi-wide-body{padding:4px 11px 10px;display:flex;flex-direction:column;gap:7px;}
+  .kpi-value{font-size:24px;font-weight:700;color:var(--ink-900);line-height:1.1;}
+  .kpi-deltas{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+  .delta{font-size:9px;font-weight:700;padding:1px 6px;border-radius:999px;display:inline-flex;
+    align-items:center;gap:3px;}
+  .delta.up{color:var(--good);background:var(--good-bg);}
+  .delta.down{color:var(--critical);background:var(--critical-bg);}
+  .delta-note{font-size:9px;color:var(--ink-500);font-weight:700;}
+  .pbar{position:relative;height:6px;background:var(--line);border-radius:3px;overflow:hidden;}
+  .pbar .fill{position:absolute;top:0;left:0;height:100%;border-radius:3px;}
+  .fill.good{background:var(--good);}
+  .fill.warn{background:var(--warn);}
+  .fill.critical{background:var(--critical);}
+  .pbar-row{display:flex;flex-direction:column;gap:3px;}
+  .pbar-row .pb-top{display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:var(--ink-500);}
+  .pbar-row .pb-top b{color:var(--ink-900);}
+
+  /* panels */
+  .panel{background:var(--neutral-0);border:1px solid var(--line);border-radius:10px;
+    display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+  .panel-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:8px 12px 7px;border-bottom:1px solid var(--line);}
+  .panel-head h3{font-size:11px;margin:0;font-weight:700;color:var(--ink-900);white-space:nowrap;}
+  .panel-body{padding:10px 12px 7px;min-height:0;}
+
+  .chart-panel{flex:1 1 auto;min-height:0;box-shadow:5px 7px 10px -2px rgba(15,23,42,0.30);}
+  .chart-body{flex:1 1 auto;min-height:0;position:relative;display:flex;align-items:stretch;}
+
+  /* in-chart legend (Tableau: floating container over the worksheet) */
+  .chart-legend{display:flex;align-items:center;gap:16px;}
+  .lg-item{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:var(--ink-600);}
+  .lg-sw{width:11px;height:11px;border-radius:2px;flex:0 0 auto;}
+  .lg-sw.plan{background:var(--accent-200);box-shadow:inset 0 0 0 1px var(--line-strong);}
+  .lg-sw.kal1{background:var(--accent-900);}
+  .lg-sw.kal2{background:var(--accent-500);}
+  .lg-sw.sum{background:var(--accent-300);}
+
+  /* measure selector chips (Tableau: parameter control) */
+  .measure-chips{display:flex;gap:4px;}
+  .mchip{font-size:9.5px;font-weight:700;padding:3px 10px;border-radius:999px;
+    border:1px solid var(--line-strong);color:var(--ink-500);background:var(--neutral-0);white-space:nowrap;}
+  .mchip.active{background:var(--accent-600);border-color:var(--accent-600);color:#fff;}
+  .measure-chips .dl-icon{flex:0 0 auto;width:14px;height:14px;margin-left:6px;align-self:center;
+    cursor:pointer;color:var(--ink-500);opacity:0.75;}
+  .measure-chips .dl-icon:hover{opacity:1;color:var(--accent-600);}
+
+  /* chart segments */
+  .seg{display:flex;flex-direction:column;min-width:0;padding:0 10px;}
+  .seg + .seg{border-left:1px solid var(--line);}
+  .seg-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;
+    color:var(--ink-500);margin-bottom:3px;}
+  .seg svg{flex:1 1 auto;width:100%;min-height:0;display:block;}
+
+  /* static tooltip (Tableau: worksheet tooltip) */
+  .tip{position:absolute;background:var(--neutral-0);border:1px solid var(--line-strong);border-radius:6px;
+    box-shadow:0 4px 10px -2px rgba(15,23,42,0.25);padding:8px 11px;font-size:10px;color:var(--ink-600);
+    line-height:1.55;white-space:nowrap;}
+  .tip b{color:var(--ink-900);}
+  .tip .tip-sub{padding-left:9px;}
+  .tip hr{border:none;border-top:1px solid var(--line);margin:5px 0;}
+
+  /* statusbar */
+  .statusbar-panel{flex:0 0 auto;}
+  .statusbar{display:flex;align-items:center;gap:18px;padding:6px 14px;}
+  .status-item{display:flex;align-items:center;gap:5px;font-size:9.5px;color:var(--ink-500);}
+  .dot{width:6px;height:6px;border-radius:50%;}
+  .dot.good{background:var(--good);}
+</style>
+</head>
+<body>
+
+<div class="fit"><div class="canvas">
+
+  <!-- Tableau: floating container / topbar -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo"><img src="primeagri.png" alt="Prime Agri Resources"></div>
+      <div>
+        <span class="eyebrow">POES &middot; Plantation Production</span>
+        <h1>Plantation Production Console</h1>
+      </div>
+    </div>
+    <div class="topbar-meta">
+      <div class="stat"><span class="v mono">PT. PAR</span><span class="l">Group</span></div>
+      <div class="stat"><span class="v mono">All Region</span><span class="l">Region</span></div>
+      <div class="stat"><span class="v mono">Mar 2026</span><span class="l">Period</span></div>
+    </div>
+  </div>
+
+  <!-- Tableau: horizontal container of parameter-driven navigation chevrons -->
+  <div class="crumb-row">
+      <div class="crumb active">PT. PAR</div>
+      <span class="crumb-sep">&rsaquo;</span>
+      <div class="crumb">Region</div>
+      <span class="crumb-sep">&rsaquo;</span>
+      <div class="crumb">Area</div>
+      <span class="crumb-sep">&rsaquo;</span>
+      <div class="crumb">PT</div>
+    </div>
+
+  <!-- Tableau: text object, page title -->
+  <div class="page-title">
+    <h2>Plantation Production Overview &ndash; Estate</h2>
+    <span class="asof">Data as of Mar 11, 2026</span>
+  </div>
+
+  <!-- Tableau: horizontal container of 4 KPI worksheets -->
+  <div class="kpi-row">
+    <div class="kpi-wide">
+      <div class="kpi-wide-head">FFB Production(MT)<span class="period">Mar 2026</span></div>
+      <div class="kpi-wide-body">
+        <span class="kpi-value mono">23,442</span>
+        <div class="kpi-deltas">
+          <span class="delta up">&#9650; +12%</span><span class="delta-note">vs. Feb 2026</span>
+          <span class="delta up">&#9650; +8%</span><span class="delta-note">vs. Mar 2025</span>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-wide">
+      <div class="kpi-wide-head">MTD Average(MT/day)<span class="period">Mar 2026</span></div>
+      <div class="kpi-wide-body">
+        <span class="kpi-value mono">31,029</span>
+        <div class="kpi-deltas">
+          <span class="delta up">&#9650; +10%</span><span class="delta-note">vs. Feb 2026</span>
+          <span class="delta up">&#9650; +7%</span><span class="delta-note">vs. Mar 2025</span>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-wide">
+      <div class="kpi-wide-head">YTD Production(MT)<span class="period">Jan &ndash; Mar 2026</span></div>
+      <div class="kpi-wide-body">
+        <span class="kpi-value mono">134,033</span>
+        <div class="kpi-deltas">
+          <span class="delta up">&#9650; +4%</span><span class="delta-note">vs. YTD 2025</span>
+        </div>
+        <div class="pbar-row">
+          <div class="pb-top"><span>Of YTD Target</span><b>95%</b></div>
+          <div class="pbar"><div class="fill good" style="width:95%"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-wide">
+      <div class="kpi-wide-head">2026 Target(MT)<span class="period">Full Year</span></div>
+      <div class="kpi-wide-body">
+        <span class="kpi-value mono">1,223,442</span>
+        <div class="pbar-row">
+          <div class="pb-top"><span>Of 2026 Target</span><b>35%</b></div>
+          <div class="pbar"><div class="fill warn" style="width:35%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau: vertical container, chart worksheet group -->
+  <div class="panel chart-panel">
+    <div class="panel-head">
+      <h3>FFB Production (Yearly / Monthly / Daily)</h3>
+      <!-- Tableau: floating container, legend -->
+      <div class="chart-legend">
+        <div class="lg-item"><span class="lg-sw plan"></span>Plan</div>
+        <div class="lg-item"><span class="lg-sw kal1"></span>KAL 1</div>
+        <div class="lg-item"><span class="lg-sw kal2"></span>KAL 2</div>
+        <div class="lg-item"><span class="lg-sw sum"></span>SUM</div>
+      </div>
+      <!-- Tableau: parameter control -->
+      <div class="measure-chips">
+        <div class="mchip active">FFB</div>
+        <div class="mchip">Yield</div>
+        <svg class="dl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><title>Download detail (crosstab)</title><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <div class="panel-body chart-body">
+
+      <!-- Tableau: worksheet, Yearly bar chart -->
+      <div class="seg" style="flex:3 1 0;">
+        <div class="seg-title">Yearly</div>
+        <svg viewBox="0 0 150 318" preserveAspectRatio="none">
+            <line x1="0" y1="292" x2="150" y2="292" stroke="#dce3e1" stroke-width="0.7"/>
+
+            <rect x="16.5" y="75.62" width="17" height="216.38" fill="#cfefea"/>
+            <rect x="16.5" y="64.8" width="17" height="156.76" fill="#00463e"/>
+            <rect x="16.5" y="221.57" width="17" height="31.81" fill="#008e82"/>
+            <rect x="16.5" y="253.38" width="17" height="38.62" fill="#00d0bc"/>
+            <text x="25" y="61.3" font-size="6.2" fill="#16231f" font-weight="700" text-anchor="middle">105%</text>
+            <text x="25" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">24</text>
+
+            <rect x="66.5" y="49.21" width="17" height="242.79" fill="#cfefea"/>
+            <rect x="66.5" y="46.79" width="17" height="169.2" fill="#00463e"/>
+            <rect x="66.5" y="215.98" width="17" height="34.33" fill="#008e82"/>
+            <rect x="66.5" y="250.31" width="17" height="41.69" fill="#00d0bc"/>
+            <text x="75" y="43.29" font-size="6.2" fill="#16231f" font-weight="700" text-anchor="middle">101%</text>
+            <text x="75" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">25</text>
+
+            <rect x="116.5" y="28.67" width="17" height="263.33" fill="#cfefea"/>
+            <rect x="116.5" y="213" width="17" height="54.51" fill="#00463e"/>
+            <rect x="116.5" y="267.51" width="17" height="11.06" fill="#008e82"/>
+            <rect x="116.5" y="278.57" width="17" height="13.43" fill="#00d0bc"/>
+            <text x="125" y="25.17" font-size="6.2" fill="#5b6b67" text-anchor="middle">30%</text>
+            <text x="125" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">26</text>
+          </svg>
+      </div>
+
+      <!-- Tableau: worksheet, Monthly bar chart -->
+      <div class="seg" style="flex:4 1 0;position:relative;">
+        <div class="seg-title">Monthly</div>
+        <svg viewBox="0 0 200 318" preserveAspectRatio="none">
+            <line x1="0" y1="292" x2="200" y2="292" stroke="#dce3e1" stroke-width="0.7"/>
+
+            <rect x="16.5" y="55.24" width="17" height="236.76" fill="#cfefea"/>
+            <rect x="16.5" y="133.37" width="17" height="109.46" fill="#00463e"/>
+            <rect x="16.5" y="242.82" width="17" height="22.21" fill="#008e82"/>
+            <rect x="16.5" y="265.03" width="17" height="26.97" fill="#00d0bc"/>
+            <text x="25" y="51.74" font-size="6.2" fill="#5b6b67" text-anchor="middle">67%</text>
+            <text x="25" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">Jan</text>
+
+            <rect x="66.5" y="57.09" width="17" height="234.91" fill="#cfefea"/>
+            <rect x="66.5" y="115.82" width="17" height="121.57" fill="#00463e"/>
+            <rect x="66.5" y="237.38" width="17" height="24.67" fill="#008e82"/>
+            <rect x="66.5" y="262.05" width="17" height="29.95" fill="#00d0bc"/>
+            <text x="75" y="53.59" font-size="6.2" fill="#5b6b67" text-anchor="middle">75%</text>
+            <text x="75" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">Feb</text>
+
+            <rect x="116.5" y="48.44" width="17" height="243.56" fill="#cfefea"/>
+            <rect x="116.5" y="84.97" width="17" height="142.85" fill="#00463e"/>
+            <rect x="116.5" y="227.82" width="17" height="28.98" fill="#008e82"/>
+            <rect x="116.5" y="256.81" width="17" height="35.19" fill="#00d0bc"/>
+            <text x="125" y="44.94" font-size="6.2" fill="#5b6b67" text-anchor="middle">85%</text>
+            <text x="125" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">Mar</text>
+
+            <rect x="166.5" y="71.45" width="17" height="220.55" fill="#cfefea"/>
+            <text x="175" y="67.95" font-size="6.2" fill="#5b6b67" text-anchor="middle">-</text>
+            <text x="175" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">Apr</text>
+          </svg>
+        <!-- Tableau: worksheet tooltip, static placement over Monthly worksheet -->
+        <div class="tip" style="left:30%;top:14%;">
+          ACT : <b>45,302 MT</b><br>
+          <span class="tip-sub">- KAL 1 : 14,039 MT</span><br>
+          <span class="tip-sub">- KAL 2 : 11,003 MT</span><br>
+          <span class="tip-sub">- SUM : 25,209 MT</span>
+          <hr>
+          BGT : <b>53,312 MT</b><br>
+          ACT - BGT : <b>-10,303 MT</b>
+        </div>
+      </div>
+
+      <!-- Tableau: worksheet, Daily bar chart -->
+      <div class="seg" style="flex:11 1 0;">
+        <div class="seg-title">Daily</div>
+        <svg viewBox="0 0 550 318" preserveAspectRatio="none">
+            <line x1="0" y1="292" x2="550" y2="292" stroke="#dce3e1" stroke-width="0.7"/>
+
+            <rect x="16.5" y="63.89" width="17" height="228.11" fill="#cfefea"/>
+            <rect x="16.5" y="118.63" width="17" height="119.62" fill="#00463e"/>
+            <rect x="16.5" y="238.26" width="17" height="24.27" fill="#008e82"/>
+            <rect x="16.5" y="262.53" width="17" height="29.47" fill="#00d0bc"/>
+            <text x="25" y="60.39" font-size="6.2" fill="#5b6b67" text-anchor="middle">76%</text>
+            <text x="25" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">1</text>
+
+            <rect x="66.5" y="36.09" width="17" height="255.91" fill="#cfefea"/>
+            <rect x="66.5" y="69.35" width="17" height="153.63" fill="#00463e"/>
+            <rect x="66.5" y="222.98" width="17" height="31.17" fill="#008e82"/>
+            <rect x="66.5" y="254.15" width="17" height="37.85" fill="#00d0bc"/>
+            <text x="75" y="32.59" font-size="6.2" fill="#5b6b67" text-anchor="middle">87%</text>
+            <text x="75" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">2</text>
+
+            <rect x="116.5" y="28.67" width="17" height="263.33" fill="#cfefea"/>
+            <rect x="116.5" y="26.04" width="17" height="183.51" fill="#00463e"/>
+            <rect x="116.5" y="209.55" width="17" height="37.23" fill="#008e82"/>
+            <rect x="116.5" y="246.79" width="17" height="45.21" fill="#00d0bc"/>
+            <text x="125" y="22.54" font-size="6.2" fill="#16231f" font-weight="700" text-anchor="middle">101%</text>
+            <text x="125" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">3</text>
+
+            <rect x="166.5" y="39.79" width="17" height="252.21" fill="#cfefea"/>
+            <rect x="166.5" y="75.1" width="17" height="149.66" fill="#00463e"/>
+            <rect x="166.5" y="224.76" width="17" height="30.37" fill="#008e82"/>
+            <rect x="166.5" y="255.13" width="17" height="36.87" fill="#00d0bc"/>
+            <text x="175" y="36.29" font-size="6.2" fill="#5b6b67" text-anchor="middle">86%</text>
+            <text x="175" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">4</text>
+
+            <rect x="216.5" y="53.23" width="17" height="238.77" fill="#cfefea"/>
+            <rect x="216.5" y="136.8" width="17" height="107.09" fill="#00463e"/>
+            <rect x="216.5" y="243.89" width="17" height="21.73" fill="#008e82"/>
+            <rect x="216.5" y="265.62" width="17" height="26.38" fill="#00d0bc"/>
+            <text x="225" y="49.73" font-size="6.2" fill="#5b6b67" text-anchor="middle">65%</text>
+            <text x="225" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">5</text>
+
+            <rect x="266.5" y="39.79" width="17" height="252.21" fill="#cfefea"/>
+            <rect x="266.5" y="102.84" width="17" height="130.52" fill="#00463e"/>
+            <rect x="266.5" y="233.36" width="17" height="26.48" fill="#008e82"/>
+            <rect x="266.5" y="259.84" width="17" height="32.16" fill="#00d0bc"/>
+            <text x="275" y="36.29" font-size="6.2" fill="#5b6b67" text-anchor="middle">75%</text>
+            <text x="275" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">6</text>
+
+            <rect x="316.5" y="73.46" width="17" height="218.54" fill="#cfefea"/>
+            <rect x="316.5" y="200.21" width="17" height="63.33" fill="#00463e"/>
+            <rect x="316.5" y="263.55" width="17" height="12.85" fill="#008e82"/>
+            <rect x="316.5" y="276.4" width="17" height="15.6" fill="#00d0bc"/>
+            <text x="325" y="69.96" font-size="6.2" fill="#5b6b67" text-anchor="middle">42%</text>
+            <text x="325" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">7</text>
+
+            <rect x="366.5" y="42.73" width="17" height="249.27" fill="#cfefea"/>
+            <rect x="366.5" y="202.26" width="17" height="61.92" fill="#00463e"/>
+            <rect x="366.5" y="264.18" width="17" height="12.56" fill="#008e82"/>
+            <rect x="366.5" y="276.74" width="17" height="15.26" fill="#00d0bc"/>
+            <text x="375" y="39.23" font-size="6.2" fill="#5b6b67" text-anchor="middle">36%</text>
+            <text x="375" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">8</text>
+
+            <rect x="416.5" y="46.59" width="17" height="245.41" fill="#cfefea"/>
+            <rect x="416.5" y="225.74" width="17" height="45.72" fill="#00463e"/>
+            <rect x="416.5" y="271.46" width="17" height="9.28" fill="#008e82"/>
+            <rect x="416.5" y="280.74" width="17" height="11.26" fill="#00d0bc"/>
+            <text x="425" y="43.09" font-size="6.2" fill="#5b6b67" text-anchor="middle">27%</text>
+            <text x="425" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">9</text>
+
+            <rect x="466.5" y="46.59" width="17" height="245.41" fill="#cfefea"/>
+            <rect x="466.5" y="186.47" width="17" height="72.81" fill="#00463e"/>
+            <rect x="466.5" y="259.29" width="17" height="14.77" fill="#008e82"/>
+            <rect x="466.5" y="274.06" width="17" height="17.94" fill="#00d0bc"/>
+            <text x="475" y="43.09" font-size="6.2" fill="#5b6b67" text-anchor="middle">43%</text>
+            <text x="475" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">10</text>
+
+            <rect x="516.5" y="69.75" width="17" height="222.25" fill="#cfefea"/>
+            <text x="525" y="66.25" font-size="6.2" fill="#5b6b67" text-anchor="middle">-</text>
+            <text x="525" y="312" font-size="6.2" fill="#3d4c48" text-anchor="middle">11</text>
+          </svg>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tableau: horizontal container, status footer -->
+  <div class="panel statusbar-panel">
+    <div class="statusbar">
+      <div class="status-item"><span class="dot good"></span>Data refreshed 11 Mar 2026 06:00 WIB</div>
+    </div>
+  </div>
+
+</div></div>
+
+<script>
+  // Shell-only: scales the 1600x900 design surface to fill the viewport at 16:9.
+  // Not part of the dashboard design -- Tableau handles this with "Fit Entire View".
+  (function(){
+    var c=document.querySelector('.canvas');
+    function fit(){
+      var s=Math.min(window.innerWidth/1600, window.innerHeight/900);
+      c.style.transform='scale('+s+')';
+    }
+    fit(); window.addEventListener('resize',fit);
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRIME AGRI RESOURCES - Project Navigation Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'prime-green': '#006D65',
+            'prime-mint': '#00D0BC',
+            'prime-deep': '#00463E',
+            'prime-black': '#000000',
+            'prime-white': '#FFFFFF',
+            'target-gold': '#F59E0B',
+            'soft-bg': '#F8FAFC',
+            'card-border': '#E2E8F0',
+            'slate-sub': '#94A3B8'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center text-slate-800 antialiased p-6">
+  <div id="app" class="w-full max-w-5xl bg-white rounded-2xl shadow-sm overflow-hidden border border-card-border p-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Project 1: Mill -->
+      <div class="p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center space-x-3 mb-4">
+            <div>
+              <h2 class="text-lg font-black text-prime-deep">{{ projects[0].name }}</h2>
+            </div>
+          </div>
+          <div class="space-y-2 mb-6">
+            <a v-for="link in projects[0].links" :key="link.url" :href="link.url" class="flex items-center justify-between p-3 rounded-lg bg-white border border-card-border hover:border-prime-green transition group">
+              <span class="text-xs font-bold text-slate-700 group-hover:text-prime-green">{{ link.label }}</span>
+              <i class="fas fa-arrow-right text-xs text-slate-sub group-hover:text-prime-green"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 2: Estate -->
+      <div class="p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center space-x-3 mb-4">
+            <div>
+              <h2 class="text-lg font-black text-prime-deep">{{ projects[1].name }}</h2>
+            </div>
+          </div>
+          <div class="space-y-2 mb-6 max-h-56 overflow-y-auto pr-1">
+            <a v-for="link in projects[1].links" :key="link.url" :href="link.url" class="flex items-center justify-between p-2.5 rounded-lg bg-white border border-card-border hover:border-prime-green transition group">
+              <span class="text-xs font-bold text-slate-700 group-hover:text-prime-green truncate">{{ link.label }}</span>
+              <i class="fas fa-arrow-right text-xs text-slate-sub group-hover:text-prime-green"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          projects: [
+            {
+              id: 'mill',
+              name: 'Mill Project',
+              links: [
+                { label: 'Mill Operation Dashboard', url: 'mill/index.html' }
+              ]
+            },
+            {
+              id: 'estate',
+              name: 'Estate Project',
+              links: [
+                { label: 'Estate Ops Fertilizer Area', url: 'estate/estate-ops-fertilizer-area.html' },
+                { label: 'Estate Ops Fertilizer Estate', url: 'estate/estate-ops-fertilizer-estate.html' },
+                { label: 'Estate Ops Plantation Overview (Total Only)', url: 'estate/estate-ops-plantation-overview-total-only.html' },
+                { label: 'Estate Ops Production Area', url: 'estate/estate-ops-production-area.html' },
+                { label: 'Estate Ops Production Estate', url: 'estate/estate-ops-production-estate.html' },
+                { label: 'Plantation Production Overview (Estate)', url: 'estate/plantation-production-overview-estate.html' },
+                { label: 'Plantation Production Overview (Mill)', url: 'estate/plantation-production-overview-mill.html' }
+              ]
+            }
+          ]
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

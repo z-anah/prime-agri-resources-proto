@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Estate Operation - Production</title>
+<style>
+  :root{
+    --accent-900:#00463e;  /* PRIME DEEP GREEN - brand, backgrounds */
+    --accent-700:#00564f;
+    --accent-600:#006d65;  /* PRIME GREEN - brand, primary surface */
+    --accent-500:#008e82;
+    --accent-400:#00b3a3;
+    --accent-300:#00d0bc;  /* PRIME MINT - brand, accent */
+    --accent-200:#cfefea;
+    --surface-tint:#e3f5f2;
+    --surface-tint-strong:#c7ece6;
+    --neutral-50:#f6f7f7;
+    --neutral-0:#ffffff;
+    --ink-900:#16231f;
+    --ink-600:#3d4c48;
+    --ink-500:#5b6b67;
+    --line:#dce3e1;
+    --line-strong:#c3cdca;
+    --good:#2e9e5b;
+    --good-bg:#e4f4ea;
+    --warn:#b9791c;
+    --warn-bg:#faf1de;
+    --critical:#c3473b;
+    --critical-bg:#fbe9e7;
+    --page-bg:#eef1f0;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;background:var(--page-bg);color:var(--ink-900);overflow:hidden;
+    font-family:"Roboto","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Liberation Mono",monospace;
+    font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:-0.01em;}
+
+  /* viewport shell: centers + scales the 16:9 design surface */
+  .fit{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+
+  /* Tableau: dashboard canvas, fixed 1600x900 (16:9), scaled to viewport */
+  .canvas{width:1600px;height:900px;flex:0 0 auto;transform-origin:center center;
+    overflow:hidden;background:var(--neutral-50);border:1px solid var(--line-strong);
+    padding:14px;display:flex;flex-direction:column;gap:9px;}
+
+  /* ---------- topbar (Tableau: horizontal container) ---------- */
+  .topbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:9px 16px;border-radius:10px;color:#fff;background:var(--accent-600);}
+  .topbar h1{font-size:15px;margin:0;font-weight:700;letter-spacing:0.01em;}
+  .topbar .eyebrow{font-size:9.5px;text-transform:uppercase;letter-spacing:0.1em;opacity:0.85;
+    font-weight:600;margin-bottom:1px;display:block;}
+  .topbar-brand{display:flex;align-items:center;gap:14px;}
+  .topbar-logo{background:var(--neutral-0);border-radius:7px;padding:6px 10px;display:flex;
+    align-items:center;flex:0 0 auto;}
+  .topbar-logo img{height:22px;width:auto;display:block;}
+  .topbar-meta{display:flex;gap:16px;align-items:center;}
+  .topbar-meta .stat{text-align:right;}
+  .topbar-meta .stat .v{font-size:12.5px;}
+  .topbar-meta .stat .l{font-size:8.5px;text-transform:uppercase;letter-spacing:0.07em;opacity:0.85;}
+
+  /* ---------- main grid: filter rail + content column ---------- */
+  .grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:230px 1fr;gap:9px;}
+  .rail{display:flex;flex-direction:column;gap:9px;min-height:0;height:100%;}
+  .rail .panel{flex:0 0 auto;box-shadow:none;}
+  .col{display:flex;flex-direction:column;gap:9px;min-height:0;height:100%;}
+
+  /* filter fields */
+  .field{display:flex;flex-direction:column;gap:3px;margin-bottom:6px;}
+  .field label{font-size:8.5px;color:var(--ink-500);text-transform:uppercase;
+    letter-spacing:0.04em;font-weight:700;}
+  .select{position:relative;}
+  .select select{width:100%;appearance:none;-webkit-appearance:none;background:var(--neutral-50);
+    border:1px solid var(--line-strong);border-radius:6px;padding:5px 22px 5px 7px;
+    font-size:11px;color:var(--ink-900);font-family:inherit;cursor:pointer;}
+  .select::after{content:"";position:absolute;right:8px;top:50%;width:6px;height:6px;
+    border-right:2px solid var(--ink-500);border-bottom:2px solid var(--ink-500);
+    transform:translateY(-65%) rotate(45deg);pointer-events:none;}
+  .btn{border:none;border-radius:6px;padding:5px 9px;font-size:10px;font-weight:700;
+    cursor:pointer;font-family:inherit;}
+  .btn-reset{background:transparent;border:1px solid var(--line-strong);color:var(--ink-500);
+    width:100%;margin-top:1px;}
+
+  /* period pills (Tableau: date-filter parameter control) */
+  .period-toggle{display:flex;gap:4px;margin-bottom:8px;}
+  .period-toggle button{flex:1;text-align:center;font-size:8.5px;font-weight:700;padding:4px 2px;
+    border-radius:999px;border:1px solid var(--line-strong);background:transparent;
+    color:var(--ink-500);font-family:inherit;cursor:pointer;}
+  .period-toggle button.active{background:var(--accent-600);border-color:var(--accent-600);color:#fff;}
+  .date-field{font-size:9px;font-weight:700;color:var(--ink-600);background:var(--surface-tint);
+    border:1px solid var(--surface-tint-strong);padding:4px 8px;border-radius:6px;}
+
+  /* legend */
+  .legend-item{display:flex;align-items:center;gap:7px;font-size:9.5px;color:var(--ink-600);padding:3px 0;}
+  .legend-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;}
+  .legend-dot.good{background:var(--good);}
+  .legend-dot.warn{background:var(--warn);}
+  .legend-dot.critical{background:var(--critical);}
+
+  /* status footer */
+  .statusbar-panel{flex:0 0 auto;}
+  .statusbar{display:flex;align-items:center;gap:16px;padding:6px 14px;}
+  .status-item{display:flex;align-items:center;gap:5px;font-size:9.5px;color:var(--ink-500);}
+  .dot{width:6px;height:6px;border-radius:50%;}
+  .dot.good{background:var(--good);}
+
+  /* tab bar (Tableau: navigation buttons to sibling dashboards) */
+  .tabbar{flex:0 0 auto;display:flex;justify-content:flex-end;gap:4px;}
+  .tab{display:flex;align-items:center;padding:0 18px;height:28px;border-radius:6px 6px 0 0;
+    font-size:10.5px;font-weight:700;text-decoration:none;background:var(--ink-600);color:#fff;}
+  .tab.active{background:var(--accent-600);}
+
+  /* page header */
+  .page-head{flex:0 0 auto;display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
+  .page-head h1{font-size:15px;margin:0;font-weight:700;color:var(--ink-900);}
+  .page-head .period-note{font-size:9.5px;font-weight:700;color:var(--ink-500);}
+
+  /* period drives the date control only - never the layout */
+  .date-field[data-show]{display:none;}
+  .canvas[data-period="daily"]   .date-field[data-show="daily"],
+  .canvas[data-period="monthly"]   .date-field[data-show="monthly"],
+  .canvas[data-period="yearly"]  .date-field[data-show="yearly"]{display:block;}
+
+  /* ---------- panels ---------- */
+  .panel{background:var(--neutral-0);border:1px solid var(--line);border-radius:9px;
+    display:flex;flex-direction:column;min-height:0;overflow:hidden;
+    box-shadow:4px 6px 9px -3px rgba(15,23,42,0.22);}
+  .panel-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:7px 11px 6px;border-bottom:1px solid var(--line);}
+  .panel-head h2{font-size:10px;margin:0;font-weight:700;text-transform:uppercase;
+    letter-spacing:0.05em;color:var(--ink-500);}
+  .panel-head .sub{font-size:9px;font-weight:700;color:var(--ink-500);}
+  .panel-body{flex:1 1 auto;min-height:0;padding:9px 11px;display:flex;flex-direction:column;gap:7px;}
+  .row{display:flex;gap:9px;min-height:0;}
+  .row.grow{flex:1 1 auto;}
+
+  /* KPI */
+  .kpi{display:flex;flex-direction:column;gap:4px;}
+  .kpi .k-label{font-size:9px;font-weight:700;color:var(--ink-500);
+    text-transform:uppercase;letter-spacing:0.05em;}
+  .kpi .k-value{font-size:24px;font-weight:700;color:var(--ink-900);line-height:1.1;}
+  .kpi .k-value .k-of{font-size:11px;font-weight:700;color:var(--ink-500);margin-left:5px;}
+  .kpi .k-sub{font-size:9px;color:var(--ink-500);font-weight:700;}
+  .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;
+    font-size:10px;font-weight:700;}
+  .badge.good{color:var(--good);background:var(--good-bg);}
+  .badge.warn{color:var(--warn);background:var(--warn-bg);}
+  .badge.critical{color:var(--critical);background:var(--critical-bg);}
+  .pbar{position:relative;height:7px;background:var(--line);border-radius:4px;overflow:hidden;}
+  .pbar .fill{position:absolute;top:0;left:0;height:100%;border-radius:4px;}
+  .fill.good{background:var(--good);}
+  .fill.warn{background:var(--warn);}
+  .fill.critical{background:var(--critical);}
+
+  /* metric rows (quality / losses lists) */
+  .mrow{display:flex;flex-direction:column;gap:3px;}
+  .mrow .m-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+    font-size:9.5px;font-weight:700;color:var(--ink-600);}
+  .mrow .m-top .m-val{font-size:11px;color:var(--ink-900);}
+  .mrow .m-lim{font-size:8.5px;font-weight:700;color:var(--ink-500);}
+
+  /* chart host */
+  .chart{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;}
+  .chart svg{flex:1 1 auto;width:100%;min-height:0;display:block;}
+  .clegend{display:flex;align-items:center;gap:14px;}
+  .clegend .ci{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;
+    color:var(--ink-600);}
+  .clegend .cs{width:10px;height:10px;border-radius:2px;flex:0 0 auto;}
+  .cs.actual{background:var(--accent-600);}
+  .cs.budget{background:var(--accent-200);}
+
+  /* measure switcher (Tableau: string parameter control); Area level only */
+  .mswitch{display:flex;gap:4px;}
+  .mswitch button{flex:1;text-align:center;font-size:8.5px;font-weight:700;padding:4px 2px;
+    border-radius:999px;border:1px solid var(--line-strong);background:transparent;
+    color:var(--ink-500);font-family:inherit;cursor:pointer;}
+  .mswitch button.active{background:var(--accent-600);border-color:var(--accent-600);color:#fff;}
+  .mblock{flex:1 1 auto;min-height:0;display:none;flex-direction:column;gap:9px;}
+  .canvas[data-measure="production"] .mblock[data-measure="production"],
+  .canvas[data-measure="output"]     .mblock[data-measure="output"]{display:flex;}
+
+  /* ---- Tableau-style date controls (static/visual only, no interaction) ---- */
+  .datebox{display:flex;align-items:center;gap:6px;background:var(--neutral-0);
+    border:1px solid var(--line-strong);border-radius:4px;padding:5px 8px;font-size:9.5px;
+    font-weight:700;color:var(--ink-900);}
+  .datebox .cal-icon{flex:0 0 auto;width:12px;height:12px;color:var(--ink-500);}
+  .daterange{display:flex;flex-direction:column;gap:7px;}
+  .daterange .dr-row{display:flex;align-items:center;gap:5px;}
+  .daterange .dr-row .datebox{flex:1 1 0;min-width:0;padding:5px 6px;font-size:9px;}
+  .daterange .dr-sep{font-size:9px;color:var(--ink-500);font-weight:700;flex:0 0 auto;}
+  .dr-slider{position:relative;height:3px;background:var(--line);border-radius:2px;margin:1px 4px 5px;}
+  .dr-slider .dr-fill{position:absolute;top:0;height:100%;background:var(--accent-600);border-radius:2px;}
+  .dr-slider .dr-handle{position:absolute;top:50%;width:9px;height:9px;border-radius:50%;
+    background:var(--neutral-0);border:2px solid var(--accent-600);transform:translate(-50%,-50%);}
+  .yearpick{position:relative;}
+  .yearpick select{width:100%;appearance:none;-webkit-appearance:none;background:var(--neutral-0);
+    border:1px solid var(--line-strong);border-radius:4px;padding:5px 22px 5px 8px;font-size:10px;
+    font-weight:700;color:var(--ink-900);font-family:inherit;cursor:pointer;}
+  .yearpick::after{content:"";position:absolute;right:8px;top:50%;width:5px;height:5px;
+    border-right:2px solid var(--ink-500);border-bottom:2px solid var(--ink-500);
+    transform:translateY(-70%) rotate(45deg);pointer-events:none;}
+
+  /* ===== page-specific ===== */
+  .row.thirds > .panel{flex:1 1 0;min-width:0;}
+  .kpi-row-single{flex:0 0 auto;}
+  .kpi-row-single .panel-body{flex-direction:row;align-items:center;gap:22px;}
+  .kpi-row-single .kpi{flex:0 0 auto;min-width:170px;}
+  .kpi-row-single .pbar-wrap{flex:1 1 auto;display:flex;flex-direction:column;gap:5px;max-width:420px;}
+  .kpi-row-single .pbar-top{display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:var(--ink-500);}
+  .quality-grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr 1fr;
+    grid-template-rows:1fr 1fr 1fr;gap:8px 16px;}
+  .mrow .pbar{margin-top:1px;}
+  .rainfall-mini{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:6px;}
+  .rainfall-caption{font-size:8.5px;color:var(--ink-500);}
+
+  /* output & loss measure block (copied from estate-ops-production.html) */
+  .kpi-row{flex:0 0 auto;}
+  .kpi-row .panel{flex:1 1 0;}
+  .kpi-row .kpi-badge-row{display:flex;align-items:center;gap:8px;}
+  .charts-row{flex:1.3 1 0;}
+  .charts-row .panel{flex:1 1 0;}
+  .losses-row{flex:0 0 auto;}
+  .losses-row .panel{flex:1 1 0;}
+  .loss-cols{display:flex;gap:9px;flex:1 1 auto;min-height:0;}
+  .loss-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:6px;
+    border-right:1px solid var(--line);padding-right:9px;}
+  .loss-col:last-child{border-right:none;padding-right:0;}
+  .loss-col .m-top{align-items:center;}
+  .loss-value{font-size:19px;font-weight:700;color:var(--ink-900);line-height:1.1;}
+  .loss-value .k-of{font-size:10px;font-weight:700;color:var(--ink-500);margin-left:4px;}
+  .loss-foot{flex:0 0 auto;font-size:8.5px;color:var(--ink-500);font-weight:600;}
+</style>
+</head>
+<body>
+<div class="fit">
+  <!-- Tableau: dashboard canvas for the Production tab, Area (roll-up) level -->
+  <div class="canvas" data-period="daily" data-measure="production"
+       data-area-file="estate-ops-production-area.html"
+       data-estate-file="estate-ops-production-estate.html">
+
+    <!-- Tableau: horizontal container - dashboard topbar -->
+    <div class="topbar">
+      <div class="topbar-brand">
+        <div class="topbar-logo"><img src="primeagri.png" alt="Prime Agri Resources"></div>
+        <div>
+          <span class="eyebrow">POES &middot; Estate Operation</span>
+          <h1>Estate Operation Dashboard</h1>
+        </div>
+      </div>
+      <div class="topbar-meta">
+        <div class="stat"><div class="v mono">Sumatera</div><div class="l">Region</div></div>
+        <div class="stat"><div class="v mono">Area 1</div><div class="l">Area</div></div>
+        <div class="stat"><div class="v mono" data-estate-meta>All estates</div><div class="l">Estate</div></div>
+      </div>
+    </div>
+
+    <!-- Tableau: horizontal container - filter rail + content column -->
+    <div class="grid">
+
+      <!-- Tableau: vertical container - filter + parameter rail -->
+      <div class="rail">
+
+        <div class="panel filter-panel">
+          <div class="panel-head"><h2>Estate Selection</h2></div>
+          <div class="panel-body">
+            <div class="field"><label>Region</label>
+              <div class="select"><select><option selected>Sumatera</option><option>Kalimantan</option></select></div>
+            </div>
+            <div class="field"><label>Area</label>
+              <div class="select"><select><option selected>Area 1</option><option>Area 2</option><option>Area 3</option></select></div>
+            </div>
+            <!-- Tableau: Estate filter (workbook-scoped parameter). "All estates" stays on this
+                 Area dashboard; selecting a single estate navigates to the Estate dashboard. -->
+            <div class="field"><label>Estate</label>
+              <div class="select"><select id="estatePick">
+                <option value="all">All estates</option>
+                <option>Mesuji</option>
+                <option>Belida</option>
+                <option>Surya Adi</option>
+                <option>Sumber Sawit</option>
+                <option>IPBS</option>
+                <option>IPBD</option>
+                <option>Hikmah Tiga</option>
+                <option>Hikmah Lima</option>
+                <option>P - Pagar Dewa</option>
+                <option>P - Makmur Bersama</option>
+              </select></div>
+            </div>
+            <button type="button" class="btn btn-reset">Reset selection</button>
+          </div>
+        </div>
+
+        <!-- Tableau: string parameter control; drives Dynamic Zone Visibility between the
+             Production and Output & Loss measure blocks on this dashboard -->
+        <div class="panel measure-panel">
+          <div class="panel-head"><h2>Measure</h2></div>
+          <div class="panel-body">
+            <div class="mswitch">
+              <button data-measure="production" class="active">Production</button>
+              <button data-measure="output">Output &amp; Loss</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tableau: date filter. "Daily" = single-value date filter. "Monthly" is the label shown
+             to users, but underneath it is a Range of Dates filter (two date boundaries) -
+             it is NOT bound to calendar month edges, any day range can be picked. "Yearly" is
+             a string/int parameter list of years. Visual only in this mockup - no live
+             interaction. -->
+        <div class="panel period-panel">
+          <div class="panel-head"><h2>Period</h2></div>
+          <div class="panel-body">
+            <div class="period-toggle">
+              <button data-period="daily" class="active">Daily</button>
+              <button data-period="monthly">Monthly</button>
+              <button data-period="yearly">Yearly</button>
+            </div>
+
+            <div class="date-field" data-show="daily">
+              <div class="datebox">
+                <svg class="cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>
+                <span>25 Sep 2026</span>
+              </div>
+            </div>
+
+            <div class="date-field" data-show="monthly">
+              <div class="daterange">
+                <div class="dr-row">
+                  <div class="datebox">
+                    <svg class="cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>
+                    <span>19 Sep 2026</span>
+                  </div>
+                  <span class="dr-sep">&rarr;</span>
+                  <div class="datebox">
+                    <svg class="cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>
+                    <span>25 Sep 2026</span>
+                  </div>
+                </div>
+                <div class="dr-slider">
+                  <div class="dr-fill" style="left:60%;width:20%;"></div>
+                  <div class="dr-handle" style="left:60%;"></div>
+                  <div class="dr-handle" style="left:80%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="date-field" data-show="yearly">
+              <div class="yearpick">
+                <select>
+                  <option>2024</option>
+                  <option>2025</option>
+                  <option selected>2026</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tableau: colour legend (static text object) -->
+        <div class="panel legend-panel">
+          <div class="panel-head"><h2>Legend</h2></div>
+          <div class="panel-body">
+            <div class="legend-item"><span class="legend-dot good"></span>On target</div>
+            <div class="legend-item"><span class="legend-dot warn"></span>Near limit</div>
+            <div class="legend-item"><span class="legend-dot critical"></span>Off target</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tableau: vertical container - dashboard content column -->
+      <div class="col">
+      <!-- Tableau: navigation buttons to the sibling dashboard (Fertilizer & Upkeep tab) -->
+      <div class="tabbar">
+        <a class="tab active" href="estate-ops-production-area.html">1. Production</a>
+        <a class="tab" href="estate-ops-fertilizer-area.html">2. Fertilizer &amp; Upkeep</a>
+      </div>
+
+      <!-- Tableau: text object - page title -->
+      <div class="page-head">
+        <h1>Production<span data-estate-name></span></h1>
+        <span class="period-note">FFB production, quality, rotation &amp; attendance</span>
+      </div>
+
+      <!-- Tableau: Dynamic Zone Visibility block, Measure = Production -->
+      <div class="mblock" data-measure="production">
+
+        <!-- Tableau: KPI worksheet - FFB Production vs Budget -->
+        <div class="panel kpi-row-single">
+          <div class="panel-body">
+            <div class="kpi">
+              <span class="k-label">FFB Production</span>
+              <span class="k-value mono">903<span class="k-of">/ 1,052 Ton</span></span>
+            </div>
+            <div class="pbar-wrap">
+              <div class="pbar-top"><span>Of Target</span><span class="badge critical">60%</span></div>
+              <div class="pbar"><div class="fill critical" style="width:60%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tableau: horizontal container, worksheet row 1 -->
+        <div class="row grow thirds">
+          <!-- Tableau: worksheet, FFB Production by Estate (stacked bar: actual + gap to budget) -->
+          <div class="panel">
+            <div class="panel-head">
+              <h2>FFB Production &ndash; Actual vs Budget by Estate</h2>
+              <div class="clegend">
+                <div class="ci"><span class="cs actual"></span>Actual</div>
+                <div class="ci"><span class="cs budget"></span>Gap to budget</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="chart">
+                <svg viewBox="0 0 450 300">
+          <line x1="14.00" y1="244.00" x2="444.00" y2="244.00" stroke="#dce3e1" stroke-width="1"/>
+          <rect x="24.45" y="179.28" width="20" height="64.72" fill="#006d65"/>
+          <rect x="24.45" y="71.70" width="20" height="107.58" fill="#cfefea"/>
+          <text x="34.45" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 34.45 250.00)">Mesuji</text>
+          <rect x="67.05" y="179.42" width="20" height="64.58" fill="#006d65"/>
+          <rect x="67.05" y="37.12" width="20" height="142.30" fill="#cfefea"/>
+          <text x="77.05" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 77.05 250.00)">Belida</text>
+          <rect x="109.65" y="222.97" width="20" height="21.03" fill="#006d65"/>
+          <text x="119.65" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 119.65 250.00)">Surya Adi</text>
+          <rect x="152.25" y="14.00" width="20" height="230.00" fill="#006d65"/>
+          <text x="162.25" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 162.25 250.00)">Sumber Sawit</text>
+          <rect x="194.85" y="238.73" width="20" height="5.27" fill="#006d65"/>
+          <text x="204.85" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 204.85 250.00)">IPBS</text>
+          <rect x="237.45" y="130.44" width="20" height="113.56" fill="#006d65"/>
+          <text x="247.45" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 247.45 250.00)">IPBD</text>
+          <rect x="280.05" y="61.59" width="20" height="182.41" fill="#006d65"/>
+          <text x="290.05" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 290.05 250.00)">Hikmah 3</text>
+          <rect x="322.65" y="70.21" width="20" height="173.79" fill="#006d65"/>
+          <text x="332.65" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 332.65 250.00)">Hikmah 5</text>
+          <rect x="365.25" y="135.84" width="20" height="108.16" fill="#006d65"/>
+          <text x="375.25" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 375.25 250.00)">P-Pagar D</text>
+          <rect x="407.85" y="216.89" width="20" height="27.11" fill="#006d65"/>
+          <text x="417.85" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 417.85 250.00)">P-Makmur B</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <!-- Tableau: worksheet, Harvest Density Index AKP (bar) -->
+          <div class="panel">
+            <div class="panel-head"><h2>Harvest Density Index (AKP)</h2><span class="sub">% ripe bunches</span></div>
+            <div class="panel-body">
+              <div class="chart">
+                <svg viewBox="0 0 450 300">
+          <line x1="14.00" y1="244.00" x2="444.00" y2="244.00" stroke="#dce3e1" stroke-width="1"/>
+          <rect x="24.65" y="188.45" width="21.30" height="55.55" fill="#008e82"/>
+          <text x="35.30" y="185.45" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">9.13</text>
+          <text x="35.30" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 35.30 250.00)">Mesuji</text>
+          <rect x="67.25" y="165.39" width="21.30" height="78.61" fill="#008e82"/>
+          <text x="77.90" y="162.39" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">12.92</text>
+          <text x="77.90" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 77.90 250.00)">Belida</text>
+          <rect x="109.85" y="104.05" width="21.30" height="139.95" fill="#008e82"/>
+          <text x="120.50" y="101.05" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">23</text>
+          <text x="120.50" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 120.50 250.00)">Surya Adi</text>
+          <rect x="152.45" y="108.62" width="21.30" height="135.38" fill="#008e82"/>
+          <text x="163.10" y="105.62" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">22.25</text>
+          <text x="163.10" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 163.10 250.00)">Sumber Sawit</text>
+          <rect x="195.05" y="91.88" width="21.30" height="152.12" fill="#008e82"/>
+          <text x="205.70" y="88.88" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">25</text>
+          <text x="205.70" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 205.70 250.00)">IPBS</text>
+          <rect x="237.65" y="91.88" width="21.30" height="152.12" fill="#008e82"/>
+          <text x="248.30" y="88.88" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">25</text>
+          <text x="248.30" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 248.30 250.00)">IPBD</text>
+          <rect x="280.25" y="123.10" width="21.30" height="120.90" fill="#008e82"/>
+          <text x="290.90" y="120.10" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">19.87</text>
+          <text x="290.90" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 290.90 250.00)">Hikmah 3</text>
+          <rect x="322.85" y="69.55" width="21.30" height="174.45" fill="#008e82"/>
+          <text x="333.50" y="66.55" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">28.67</text>
+          <text x="333.50" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 333.50 250.00)">Hikmah 5</text>
+          <rect x="365.45" y="33.47" width="21.30" height="210.53" fill="#008e82"/>
+          <text x="376.10" y="30.47" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">34.6</text>
+          <text x="376.10" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 376.10 250.00)">P-Pagar D</text>
+          <rect x="408.05" y="31.04" width="21.30" height="212.96" fill="#008e82"/>
+          <text x="418.70" y="28.04" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">35</text>
+          <text x="418.70" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 418.70 250.00)">P-Makmur B</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <!-- Tableau: worksheet, Harvest Rotation (stacked bar) -->
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Harvest Rotation</h2>
+              <div class="clegend">
+                <div class="ci"><span class="cs" style="background:#00463e"></span>&lt;10</div>
+                <div class="ci"><span class="cs" style="background:#008e82"></span>11-15</div>
+                <div class="ci"><span class="cs" style="background:#00d0bc"></span>16-20</div>
+                <div class="ci"><span class="cs" style="background:#cfefea"></span>&gt;20</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="chart">
+                <svg viewBox="0 0 450 300">
+          <line x1="14.00" y1="244.00" x2="444.00" y2="244.00" stroke="#dce3e1" stroke-width="1"/>
+          <rect x="24.65" y="109.25" width="21.30" height="134.75" fill="#00463e"/>
+          <text x="35.30" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 35.30 250.00)">Mesuji</text>
+          <rect x="67.25" y="115.15" width="21.30" height="128.85" fill="#00463e"/>
+          <text x="77.90" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 77.90 250.00)">Belida</text>
+          <rect x="109.85" y="218.45" width="21.30" height="25.55" fill="#00463e"/>
+          <text x="120.50" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 120.50 250.00)">Surya Adi</text>
+          <rect x="152.45" y="31.04" width="21.30" height="212.96" fill="#00463e"/>
+          <text x="163.10" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 163.10 250.00)">Sumber Sawit</text>
+          <rect x="195.05" y="210.34" width="21.30" height="33.66" fill="#00463e"/>
+          <text x="205.70" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 205.70 250.00)">IPBS</text>
+          <rect x="237.65" y="159.45" width="21.30" height="84.55" fill="#00463e"/>
+          <text x="248.30" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 248.30 250.00)">IPBD</text>
+          <rect x="280.25" y="43.25" width="21.30" height="200.75" fill="#00463e"/>
+          <rect x="280.25" y="31.32" width="21.30" height="11.93" fill="#008e82"/>
+          <text x="290.90" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 290.90 250.00)">Hikmah 3</text>
+          <rect x="322.85" y="91.26" width="21.30" height="152.74" fill="#00463e"/>
+          <text x="333.50" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 333.50 250.00)">Hikmah 5</text>
+          <rect x="365.45" y="120.09" width="21.30" height="123.91" fill="#00463e"/>
+          <rect x="365.45" y="106.01" width="21.30" height="14.08" fill="#008e82"/>
+          <text x="376.10" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 376.10 250.00)">P-Pagar D</text>
+          <rect x="408.05" y="214.00" width="21.30" height="30.00" fill="#00463e"/>
+          <text x="418.70" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 418.70 250.00)">P-Makmur B</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tableau: horizontal container, worksheet row 2 -->
+        <div class="row grow thirds">
+          <!-- Tableau: worksheet, FFB Quality metric rows -->
+          <div class="panel">
+            <div class="panel-head"><h2>FFB Quality</h2><span class="sub">% of fruit graded</span></div>
+            <div class="panel-body">
+              <div class="quality-grid">
+                <div class="mrow">
+                  <div class="m-top"><span>Unripe</span><span class="m-val">1.68%</span></div>
+                  <div class="m-lim">Max 0%</div>
+                  <div class="pbar"><div class="fill critical" style="width:86%"></div></div>
+                </div>
+                <div class="mrow">
+                  <div class="m-top"><span>Underripe</span><span class="m-val">0.03%</span></div>
+                  <div class="m-lim">Max 5%</div>
+                  <div class="pbar"><div class="fill good" style="width:6%"></div></div>
+                </div>
+                <div class="mrow">
+                  <div class="m-top"><span>Ripe</span><span class="m-val">91.52%</span></div>
+                  <div class="m-lim">Min 89%</div>
+                  <div class="pbar"><div class="fill good" style="width:100%"></div></div>
+                </div>
+                <div class="mrow">
+                  <div class="m-top"><span>Overripe</span><span class="m-val">5.96%</span></div>
+                  <div class="m-lim">Max 5%</div>
+                  <div class="pbar"><div class="fill critical" style="width:100%"></div></div>
+                </div>
+                <div class="mrow">
+                  <div class="m-top"><span>Rotten</span><span class="m-val">0.80%</span></div>
+                  <div class="m-lim">Max 1%</div>
+                  <div class="pbar"><div class="fill good" style="width:80%"></div></div>
+                </div>
+                <div class="mrow">
+                  <div class="m-top"><span>Loose Fruit</span><span class="m-val">3.86%</span></div>
+                  <div class="m-lim">Min 7%</div>
+                  <div class="pbar"><div class="fill critical" style="width:55%"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Tableau: worksheet, Harvester Attendance (bar + reference line) -->
+          <div class="panel">
+            <div class="panel-head"><h2>Harvester Attendance (%)</h2><span class="sub">vs target</span></div>
+            <div class="panel-body">
+              <div class="chart">
+                <svg viewBox="0 0 450 300">
+          <line x1="14.00" y1="244.00" x2="444.00" y2="244.00" stroke="#dce3e1" stroke-width="1"/>
+          <rect x="24.65" y="52.23" width="21.30" height="191.77" fill="#006d65"/>
+          <text x="35.30" y="49.23" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">88.6</text>
+          <text x="35.30" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 35.30 250.00)">Mesuji</text>
+          <rect x="67.25" y="40.54" width="21.30" height="203.46" fill="#006d65"/>
+          <text x="77.90" y="37.54" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">94</text>
+          <text x="77.90" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 77.90 250.00)">Belida</text>
+          <rect x="109.85" y="36.86" width="21.30" height="207.14" fill="#006d65"/>
+          <text x="120.50" y="33.86" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">95.7</text>
+          <text x="120.50" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 120.50 250.00)">Surya Adi</text>
+          <rect x="152.45" y="50.71" width="21.30" height="193.29" fill="#006d65"/>
+          <text x="163.10" y="47.71" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">89.3</text>
+          <text x="163.10" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 163.10 250.00)">Sumber Sawit</text>
+          <rect x="195.05" y="42.05" width="21.30" height="201.95" fill="#006d65"/>
+          <text x="205.70" y="39.05" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">93.3</text>
+          <text x="205.70" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 205.70 250.00)">IPBS</text>
+          <rect x="237.65" y="53.31" width="21.30" height="190.69" fill="#006d65"/>
+          <text x="248.30" y="50.31" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">88.1</text>
+          <text x="248.30" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 248.30 250.00)">IPBD</text>
+          <rect x="280.25" y="59.80" width="21.30" height="184.20" fill="#006d65"/>
+          <text x="290.90" y="56.80" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">85.1</text>
+          <text x="290.90" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 290.90 250.00)">Hikmah 3</text>
+          <rect x="322.85" y="34.91" width="21.30" height="209.09" fill="#006d65"/>
+          <text x="333.50" y="31.91" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">96.6</text>
+          <text x="333.50" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 333.50 250.00)">Hikmah 5</text>
+          <rect x="365.45" y="58.50" width="21.30" height="185.50" fill="#006d65"/>
+          <text x="376.10" y="55.50" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">85.7</text>
+          <text x="376.10" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 376.10 250.00)">P-Pagar D</text>
+          <rect x="408.05" y="53.52" width="21.30" height="190.48" fill="#006d65"/>
+          <text x="418.70" y="50.52" font-size="10.5" fill="#16231f" font-weight="700" text-anchor="middle">88</text>
+          <text x="418.70" y="250.00" font-size="11" fill="#3d4c48" text-anchor="end" transform="rotate(-38 418.70 250.00)">P-Makmur B</text>
+          <line x1="14.00" y1="49.19" x2="444.00" y2="49.19" stroke="#5b6b67" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="442.00" y="46.19" font-size="11" fill="#5b6b67" text-anchor="end">Target 90%</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <!-- Tableau: worksheet, Rainfall summary -->
+          <div class="panel">
+            <div class="panel-head"><h2>Rainfall</h2><span class="sub">Monthly</span></div>
+            <div class="panel-body">
+              <div class="rainfall-mini">
+                <div class="kpi">
+                  <span class="k-label">Rainfall (mm)</span>
+                  <span class="k-value mono">12<span class="k-of">/ 12</span></span>
+                </div>
+                <div class="pbar"><div class="fill good" style="width:100%"></div></div>
+                <div class="mrow"><div class="m-top"><span>Rainy Days</span><span class="m-val">Rain</span></div></div>
+                <div class="rainfall-caption">Rainfall recorded today</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- /Tableau: Dynamic Zone Visibility block, Measure = Production -->
+
+      <!-- Tableau: Dynamic Zone Visibility block, Measure = Output & Loss -->
+      <div class="mblock" data-measure="output">
+
+        <!-- Tableau: horizontal container, KPI worksheet pair -->
+        <div class="row kpi-row">
+          <div class="panel">
+            <div class="panel-head"><h2>Harvester Output</h2><span class="sub">Kg/HK</span></div>
+            <div class="panel-body">
+              <div class="kpi">
+                <div class="k-label">Actual vs Target</div>
+                <div class="k-value mono">1,063<span class="k-of">/ 1,050 Kg/HK</span></div>
+                <div class="kpi-badge-row">
+                  <span class="badge good">100%</span>
+                  <div class="pbar" style="flex:1 1 auto;"><div class="fill good" style="width:100%"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Area per Workday</h2><span class="sub">Ha/HK</span></div>
+            <div class="panel-body">
+              <div class="kpi">
+                <div class="k-label">Actual vs Target</div>
+                <div class="k-value mono">2.9<span class="k-of">/ 3.0 Ha/HK</span></div>
+                <div class="kpi-badge-row">
+                  <span class="badge good">97%</span>
+                  <div class="pbar" style="flex:1 1 auto;"><div class="fill good" style="width:97%"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tableau: horizontal container, estate performance worksheets -->
+        <div class="row grow charts-row">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Harvester Output by Estate (Kg/HK)</h2>
+              <div class="clegend">
+                <div class="ci"><span class="cs actual"></span>Actual</div>
+                <div class="ci"><span class="cs" style="background:#cfefea;"></span>Gap to target</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="chart">
+                <svg viewBox="0 0 655 278">
+                  <line x1="8" y1="240" x2="647" y2="240" stroke="#dce3e1" stroke-width="0.8"/>
+                  <!-- Mesuji -->
+                  <rect x="38" y="140.18" width="30" height="99.82" fill="#006d65"/>
+                  <rect x="38" y="118.18" width="30" height="21.99" fill="#cfefea"/>
+                  <text x="53" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">Mesuji</text>
+                  <!-- Belida -->
+                  <rect x="99" y="155.23" width="30" height="84.77" fill="#006d65"/>
+                  <rect x="99" y="118.18" width="30" height="37.05" fill="#cfefea"/>
+                  <text x="114" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">Belida</text>
+                  <!-- S. Adi -->
+                  <rect x="160" y="131.88" width="30" height="108.12" fill="#006d65"/>
+                  <rect x="160" y="118.17" width="30" height="13.71" fill="#cfefea"/>
+                  <text x="175" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">S. Adi</text>
+                  <!-- S. Sawit -->
+                  <rect x="221" y="49.53" width="30" height="190.47" fill="#006d65"/>
+                  <text x="236" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">S. Sawit</text>
+                  <!-- IPBS -->
+                  <rect x="282" y="217.6" width="30" height="22.4" fill="#006d65"/>
+                  <rect x="282" y="158.79" width="30" height="58.81" fill="#cfefea"/>
+                  <text x="297" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">IPBS</text>
+                  <!-- IPBD -->
+                  <rect x="343" y="14" width="30" height="226" fill="#006d65"/>
+                  <text x="358" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">IPBD</text>
+                  <!-- H. Tiga -->
+                  <rect x="404" y="39.04" width="30" height="200.96" fill="#006d65"/>
+                  <text x="419" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">H. Tiga</text>
+                  <!-- H. Lima -->
+                  <rect x="465" y="53.52" width="30" height="186.48" fill="#006d65"/>
+                  <text x="480" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">H. Lima</text>
+                  <!-- P-PD -->
+                  <rect x="526" y="59.65" width="30" height="180.35" fill="#006d65"/>
+                  <text x="541" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">P-PD</text>
+                  <!-- P-MB -->
+                  <rect x="587" y="100.64" width="30" height="139.36" fill="#006d65"/>
+                  <rect x="587" y="77.58" width="30" height="23.06" fill="#cfefea"/>
+                  <text x="602" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">P-MB</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Area per Workday by Estate (Ha/HK)</h2>
+              <span class="sub">Ref: 3.0 Ha/HK</span>
+            </div>
+            <div class="panel-body">
+              <div class="chart">
+                <svg viewBox="0 0 655 278">
+                  <line x1="8" y1="240" x2="647" y2="240" stroke="#dce3e1" stroke-width="0.8"/>
+                  <line x1="8" y1="103.32" x2="647" y2="103.32" stroke="#5b6b67" stroke-width="1" stroke-dasharray="4 3"/>
+                  <rect x="38" y="14.0" width="30" height="226.0" fill="#2e9e5b"/>
+                  <text x="53" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">Mesuji</text>
+                  <rect x="99" y="34.1" width="30" height="205.9" fill="#2e9e5b"/>
+                  <text x="114" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">Belida</text>
+                  <rect x="160" y="139.3" width="30" height="100.7" fill="#c3473b"/>
+                  <text x="175" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">S. Adi</text>
+                  <rect x="221" y="139.8" width="30" height="100.2" fill="#c3473b"/>
+                  <text x="236" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">S. Sawit</text>
+                  <rect x="282" y="102.0" width="30" height="138.0" fill="#2e9e5b"/>
+                  <text x="297" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">IPBS</text>
+                  <rect x="343" y="153.9" width="30" height="86.1" fill="#c3473b"/>
+                  <text x="358" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">IPBD</text>
+                  <rect x="404" y="111.5" width="30" height="128.5" fill="#c3473b"/>
+                  <text x="419" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">H. Tiga</text>
+                  <rect x="465" y="120.2" width="30" height="119.8" fill="#c3473b"/>
+                  <text x="480" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">H. Lima</text>
+                  <rect x="526" y="117.9" width="30" height="122.1" fill="#c3473b"/>
+                  <text x="541" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">P-PD</text>
+                  <rect x="587" y="144.3" width="30" height="95.7" fill="#c3473b"/>
+                  <text x="602" y="254" font-size="10.3" fill="#3d4c48" text-anchor="middle">P-MB</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tableau: horizontal container, Harvest Losses worksheet -->
+        <div class="row losses-row">
+          <div class="panel">
+            <div class="panel-head"><h2>Harvest Losses</h2></div>
+            <div class="panel-body">
+              <div class="loss-cols">
+                <div class="loss-col">
+                  <div class="mrow">
+                    <div class="m-top"><span>Fruit Left Behind (New)</span><span class="badge good">Good</span></div>
+                    <div class="loss-value mono">0.15<span class="k-of">%</span></div>
+                    <div class="m-lim">max 1 %</div>
+                  </div>
+                </div>
+                <div class="loss-col">
+                  <div class="mrow">
+                    <div class="m-top"><span>Loose Fruit Left on Circle</span><span class="badge critical">Off target</span></div>
+                    <div class="loss-value mono">12<span class="k-of">pcs/palm</span></div>
+                    <div class="m-lim">max 2</div>
+                  </div>
+                </div>
+                <div class="loss-col">
+                  <div class="mrow">
+                    <div class="m-top"><span>Loose Fruit Left at TPH</span><span class="badge critical">Off target</span></div>
+                    <div class="loss-value mono">5<span class="k-of">pcs/TPH</span></div>
+                    <div class="m-lim">max 2</div>
+                  </div>
+                </div>
+              </div>
+              <div class="loss-foot">TPH - fruit collection point at the roadside</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- /Tableau: Dynamic Zone Visibility block, Measure = Output & Loss -->
+
+      <!-- Tableau: horizontal container - status footer -->
+      <div class="panel statusbar-panel">
+        <div class="statusbar">
+          <div class="status-item"><span class="dot good"></span>Last updated 25 Sep 2026, 06:00 WIB</div>
+          <div class="status-item">MOCK-UP &mdash; illustrative data</div>
+        </div>
+      </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+  // Shell-only: scales the 1600x900 design surface to fill the viewport at 16:9.
+  // Not part of the dashboard design - Tableau handles this with "Fit Entire View".
+  (function(){
+    var c=document.querySelector('.canvas');
+    function fit(){
+      var s=Math.min(window.innerWidth/1600, window.innerHeight/900);
+      c.style.transform='scale('+s+')';
+    }
+    fit(); window.addEventListener('resize',fit);
+  })();
+</script>
+<script>
+  // Shared dashboard state: Estate / Period / Measure carry across navigation via localStorage,
+  // simulating Tableau's workbook-scoped parameters (no Dynamic Zone Visibility needed for the
+  // Area <-> Estate transition any more - that is now two separate dashboards).
+  (function(){
+    var KEY_ESTATE='eo_estate', KEY_PERIOD='eo_period', KEY_MEASURE='eo_measure';
+    var canvas = document.querySelector('.canvas');
+    var sel = document.getElementById('estatePick');
+    var isEstatePage = canvas.hasAttribute('data-estate-page');
+    var areaFile = canvas.getAttribute('data-area-file');
+    var estateFile = canvas.getAttribute('data-estate-file');
+
+    var estate = localStorage.getItem(KEY_ESTATE) || 'all';
+    var period = localStorage.getItem(KEY_PERIOD) || 'daily';
+    var measure = localStorage.getItem(KEY_MEASURE) || 'production';
+
+    // An Estate-detail page always needs a named estate; fall back to a representative one.
+    if (isEstatePage && estate === 'all') { estate = 'Mesuji'; }
+
+    function applyEstate(v){
+      document.querySelectorAll('[data-estate-name]').forEach(function(n){
+        n.textContent = v === 'all' ? '' : ' — ' + v;
+      });
+      document.querySelectorAll('[data-estate-meta]').forEach(function(n){
+        n.textContent = v === 'all' ? 'All estates' : v;
+      });
+    }
+
+    if (sel) { sel.value = estate; }
+    applyEstate(estate);
+    canvas.setAttribute('data-period', period);
+    canvas.setAttribute('data-measure', measure);
+    document.querySelectorAll('.period-toggle button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-period') === period);
+    });
+    document.querySelectorAll('.mswitch button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-measure') === measure);
+    });
+
+    if (sel) {
+      sel.addEventListener('change', function(){
+        var v = sel.value;
+        localStorage.setItem(KEY_ESTATE, v);
+        if (v === 'all') {
+          if (isEstatePage) { location.href = areaFile; } else { applyEstate(v); }
+        } else {
+          if (!isEstatePage) { location.href = estateFile; } else { applyEstate(v); }
+        }
+      });
+    }
+
+    document.querySelectorAll('.period-toggle button').forEach(function(b){
+      b.addEventListener('click', function(){
+        document.querySelectorAll('.period-toggle button').forEach(function(x){ x.classList.remove('active'); });
+        b.classList.add('active');
+        var p = b.getAttribute('data-period');
+        canvas.setAttribute('data-period', p);
+        localStorage.setItem(KEY_PERIOD, p);
+      });
+    });
+
+    document.querySelectorAll('.mswitch button').forEach(function(b){
+      b.addEventListener('click', function(){
+        document.querySelectorAll('.mswitch button').forEach(function(x){ x.classList.remove('active'); });
+        b.classList.add('active');
+        var m = b.getAttribute('data-measure');
+        canvas.setAttribute('data-measure', m);
+        localStorage.setItem(KEY_MEASURE, m);
+      });
+    });
+  })();
+</script>
+</body>
+</html>
