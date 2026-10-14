@@ -1,0 +1,2287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRIME AGRI RESOURCES - BMP Mature Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'prime-green': '#13675A',
+                        'prime-mint': '#20C997',
+                        'prime-deep': '#0C3832',
+                        'success-green': '#3B8B67',
+                        'success-bg': '#E4F3EC',
+                        'warning-amber': '#E2A138',
+                        'amber-bg': '#FAF0DD',
+                        'alert-red': '#CA5244',
+                        'red-bg': '#F9E8E6',
+                        'soft-bg': '#F3F5F7',
+                        'card-border': '#D1D5DB',
+                        'slate-sub': '#6B7280'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #d1d5db;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .app-viewport {
+            width: 1366px;
+            height: 768px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background-color: #FFFFFF;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #A0AEC0;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="app-viewport">
+        <header class="bg-[#194740] text-white px-6 py-2 flex items-center justify-between shadow-md flex-shrink-0">
+            <div class="flex items-center space-x-2">
+                <img src="logo.png" alt="Prime Agri Resources" class="h-9 w-auto">
+            </div>
+            <nav class="flex items-center space-x-8 font-bold text-xs">
+                <button v-for="page in pages" :key="page.id" @click="currentPage = page.id"
+                    :class="currentPage === page.id ? 'text-white border-b-2 border-white pb-0.5' : 'text-[#00D0BC] hover:text-white'">
+                    {{ page.name }}
+                </button>
+            </nav>
+        </header>
+
+        <div v-if="currentPage === 'mature'" class="flex-1 min-h-0 flex p-3 gap-1 overflow-visible bg-[#F8FAFC]">
+            <aside class="w-[200px] flex-shrink-0 flex flex-col gap-3 text-xs overflow-y-auto">
+                <div
+                    class="bg-[#00463E] text-white rounded-lg p-3 border border-[#006D65] shadow-sm flex flex-col gap-2.5">
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">REGION</label>
+                        <select v-model="filters.region"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">PT</label>
+                        <select v-model="filters.pt"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">AREA</label>
+                        <select v-model="filters.area"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">ESTATE</label>
+                        <select v-model="filters.estate"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none mb-1.5">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">DIVISION</label>
+                        <select v-model="filters.division"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BLOCK</label>
+                        <select v-model="filters.block"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BLOCK TYPE</label>
+                        <select v-model="filters.blockType"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>BMP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BMP TYPE</label>
+                        <select v-model="filters.bmpType"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>Mature</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">PERIOD</label>
+                        <select v-model="filters.period"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>MTD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">MONTH</label>
+                        <select v-model="filters.month"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>Aug 2026</option>
+                        </select>
+                    </div>
+                    <div class="text-[8px] text-white/70 italic mt-1">
+                        Data: BMP Performance Aug 2026 (update 7 Okt). Hierarki filter: Region › PT › Area › Estate
+                        (requirement).
+                    </div>
+                </div>
+            </aside>
+
+            <main class="flex-1 min-h-0 flex flex-col px-3 gap-2 overflow-y-auto">
+
+                <div class="flex items-center justify-between text-xs text-slate-700 flex-shrink-0 px-1">
+                    <div class="font-bold text-[13px] tracking-tight text-[#000000]">Executive Overview · Aug 2026 (MTD)
+                        · MoM vs Jul</div>
+                    <div class="flex items-center space-x-3 text-[11px]">
+                        <div class="bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-1 rounded text-slate-600">Last updated:
+                            <strong class="text-slate-900 font-black">{{ meta.lastUpdated }}</strong>
+                        </div>
+                        <div class="bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-1 rounded text-slate-600">Months
+                            loaded: <strong class="text-slate-900 font-black">{{ meta.monthsLoaded }}</strong></div>
+                        <div class="bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-1 rounded text-slate-600">Delayed
+                            estates: <strong class="text-slate-900 font-black">{{ meta.delayedEstates }}</strong></div>
+                        <div class="bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-1 rounded text-slate-600">Planned BMP
+                            area: <strong class="text-slate-900 font-black">{{ meta.plannedBmpArea }}</strong></div>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-[#006D65] text-white px-4 py-2 rounded flex items-center justify-between shadow-xs flex-shrink-0">
+                    <h2 class="text-[13px] font-black tracking-wide uppercase">BMP TM · Mature blocks</h2>
+                    <span class="text-[11px] font-semibold tracking-wide text-slate-100">25 estates · 8,510 ha · BMP
+                        score, distribusi & produksi</span>
+                </div>
+
+                <div class="grid grid-cols-4 gap-2.5 flex-shrink-0">
+
+                    <div
+                        class="bg-white rounded-md p-2.5 border border-[#E2E8F0] shadow-2xs flex flex-col justify-between">
+                        <div class="text-[11px] font-bold text-[#00463E] uppercase tracking-tight">BMP Score TM</div>
+                        <div class="flex items-baseline justify-between my-1">
+                            <span class="text-3xl font-extrabold text-[#F59E0B] tracking-tight">{{ kpi.bmpScore
+                                }}%</span>
+                            <div class="text-right space-y-0.5 text-[11px] font-bold">
+                                <div class="text-[#000000]">Sumatra <span class="font-black text-[#006D65] ml-1">{{
+                                        kpi.sumatraScore }}%</span> <span class="text-[#10B981] text-[10px] ml-0.5"><i
+                                            class="fas fa-caret-up"></i> {{ kpi.sumatraMoM }}</span></div>
+                                <div class="text-[#000000]">Kalimantan <span class="font-black text-[#006D65] ml-1">{{
+                                        kpi.kalimantanScore }}%</span> <span
+                                        class="text-[#10B981] text-[10px] ml-0.5"><i class="fas fa-caret-up"></i> {{
+                                        kpi.kalimantanMoM }}</span></div>
+                            </div>
+                        </div>
+                        <div class="pt-1.5 border-t border-[#E2E8F0] flex items-center">
+                            <span class="text-[10px] font-bold bg-[#D1FAE5] text-[#10B981] px-2 py-0.5 rounded-full"><i
+                                    class="fas fa-caret-up"></i> {{ kpi.momOverall }} pp MoM</span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-md p-2.5 border border-[#E2E8F0] shadow-2xs flex flex-col justify-between">
+                        <div class="text-[11px] font-bold text-[#00463E] uppercase tracking-tight">Distribution TM
+                            (estates)</div>
+                        <div class="grid grid-cols-3 gap-2 my-1 text-center">
+                            <div class="bg-[#D1FAE5] p-1 rounded border border-[#10B981]">
+                                <div class="text-[10px] font-bold text-[#00463E]">High</div>
+                                <div class="text-lg font-black text-[#006D65] leading-none">{{ distribution.high }}<span
+                                        class="text-[10px] text-[#00463E]/70 font-normal">/25</span></div>
+                                <div class="text-[8px] text-[#00463E]/70 mt-0.5">±0 vs Jul</div>
+                            </div>
+                            <div class="bg-[#FEF3C7] p-1 rounded border border-[#F59E0B]">
+                                <div class="text-[10px] font-bold text-[#F59E0B]">Mid</div>
+                                <div class="text-lg font-black text-[#F59E0B] leading-none">{{ distribution.mid }}<span
+                                        class="text-[10px] text-[#00463E]/70 font-normal">/25</span></div>
+                                <div class="text-[8px] text-[#00463E]/70 mt-0.5">±0 vs Jul</div>
+                            </div>
+                            <div class="bg-[#FEE2E2] p-1 rounded border border-[#EF4444]">
+                                <div class="text-[10px] font-bold text-[#EF4444]">Low</div>
+                                <div class="text-lg font-black text-[#EF4444] leading-none">{{ distribution.low }}<span
+                                        class="text-[10px] text-[#00463E]/70 font-normal">/25</span></div>
+                                <div class="text-[8px] text-[#00463E]/70 mt-0.5">±0 vs Jul</div>
+                            </div>
+                        </div>
+                        <div class="text-[8px] text-[#00463E]/60">High ≥ 80% · Mid 75–80% · Low &lt; 75% (usulan)</div>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-md p-2.5 border border-[#E2E8F0] shadow-2xs flex flex-col justify-between">
+                        <div class="text-[11px] font-bold text-[#00463E] uppercase tracking-tight">Production · Yield
+                            YTD</div>
+                        <div class="flex items-center justify-between my-1">
+                            <div>
+                                <div class="text-2xl font-black text-[#000000] leading-none">{{ production.yieldYtd }}
+                                    <span class="text-xs font-normal text-[#00463E]/70">t/ha</span>
+                                </div>
+                                <div class="text-[10px] text-[#00463E] font-medium mt-1">Budget {{ production.budget }}
+                                    t/ha</div>
+                                <div class="text-[9px] text-[#00463E]/60">Target 2026 {{ production.target }} t/ha</div>
+                            </div>
+                            <div class="text-center">
+                                <div
+                                    class="text-base font-black text-[#006D65] leading-none bg-[#D1FAE5] px-3 py-1.5 rounded border border-[#10B981]">
+                                    {{ production.vsBudget }}%
+                                </div>
+                                <div class="text-[8px] text-[#00463E]/70 mt-0.5">vs budget</div>
+                                <div class="text-[9px] font-bold text-[#EF4444] mt-0.5 bg-[#FEE2E2] px-1 rounded"><i
+                                        class="fas fa-caret-down"></i> {{ production.vsBudgetPp }} pp</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-md p-2.5 border border-[#E2E8F0] shadow-2xs flex flex-col justify-between">
+                        <div class="text-[11px] font-bold text-[#00463E] uppercase tracking-tight">Yield Status
+                            (estates)</div>
+                        <div class="grid grid-cols-3 gap-2 my-1 text-center">
+                            <div class="bg-[#D1FAE5] p-1.5 rounded border border-[#10B981]">
+                                <div class="text-[10px] font-bold text-[#00463E]">On Track</div>
+                                <div class="text-xl font-black text-[#006D65] leading-none">{{ yieldStatus.onTrack }}
+                                </div>
+                            </div>
+                            <div class="bg-[#FEF3C7] p-1.5 rounded border border-[#F59E0B]">
+                                <div class="text-[10px] font-bold text-[#F59E0B]">At Risk</div>
+                                <div class="text-xl font-black text-[#F59E0B] leading-none">{{ yieldStatus.atRisk }}
+                                </div>
+                            </div>
+                            <div class="bg-[#FEE2E2] p-1.5 rounded border border-[#EF4444]">
+                                <div class="text-[10px] font-bold text-[#EF4444]">Below</div>
+                                <div class="text-xl font-black text-[#EF4444] leading-none">{{ yieldStatus.below }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-[8px] text-[#00463E]/60">≥100% · 85–99% · &lt; 85% of budget YTD · ton: DIR
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="grid grid-cols-12 gap-2.5 flex-1 min-h-0">
+
+                    <div class="col-span-4 flex flex-col gap-2">
+
+                        <div class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs flex-shrink-0">
+                            <h3 class="text-[11px] font-bold text-[#00463E] uppercase mb-2">High / Mid / Low by Region ·
+                                TM</h3>
+                            <div class="space-y-2">
+                                <div v-for="reg in regionBreakdown" :key="reg.name" class="space-y-1">
+                                    <div class="text-[11px] font-bold text-[#00463E]">{{ reg.name }}</div>
+                                    <div class="grid grid-cols-3 gap-1 text-center text-[10px] font-extrabold">
+                                        <div
+                                            class="bg-[#D1FAE5] text-[#006D65] py-0.5 px-1 rounded flex items-center justify-between border border-[#10B981]/20">
+                                            <span>{{ reg.highCount }}<span
+                                                    class="font-normal text-[9px] text-[#00463E]/70">/{{ reg.total
+                                                    }}</span></span>
+                                            <span class="font-normal text-[9px] text-[#00463E]/70">{{ reg.highPct
+                                                }}%</span>
+                                            <span
+                                                :class="reg.highDiff.includes('+') ? 'text-[#10B981]' : 'text-[#EF4444]'"
+                                                class="text-[8px]">{{ reg.highDiff }}</span>
+                                        </div>
+                                        <div
+                                            class="bg-[#FEF3C7] text-[#F59E0B] py-0.5 px-1 rounded flex items-center justify-between border border-[#F59E0B]/20">
+                                            <span>{{ reg.midCount }}<span
+                                                    class="font-normal text-[9px] text-[#00463E]/70">/{{ reg.total
+                                                    }}</span></span>
+                                            <span class="font-normal text-[9px] text-[#00463E]/70">{{ reg.midPct
+                                                }}%</span>
+                                            <span
+                                                :class="reg.midDiff.includes('+') ? 'text-[#10B981]' : 'text-[#EF4444]'"
+                                                class="text-[8px]">{{ reg.midDiff }}</span>
+                                        </div>
+                                        <div
+                                            class="bg-[#FEE2E2] text-[#EF4444] py-0.5 px-1 rounded flex items-center justify-between border border-[#EF4444]/20">
+                                            <span>{{ reg.lowCount }}<span
+                                                    class="font-normal text-[9px] text-[#00463E]/70">/{{ reg.total
+                                                    }}</span></span>
+                                            <span class="font-normal text-[9px] text-[#00463E]/70">{{ reg.lowPct
+                                                }}%</span>
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="w-full bg-[#F8FAFC] h-1.5 rounded-full overflow-hidden flex border border-[#E2E8F0]">
+                                        <div class="bg-[#10B981] h-full" :style="{ width: reg.highBar + '%' }"></div>
+                                        <div class="bg-[#F59E0B] h-full" :style="{ width: reg.midBar + '%' }"></div>
+                                        <div class="bg-[#EF4444] h-full" :style="{ width: reg.lowBar + '%' }"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs flex-1 flex flex-col min-h-0">
+                            <div class="flex items-center justify-between mb-1">
+                                <h3 class="text-[11px] font-bold text-[#00463E] uppercase">TM Yield YTD · Actual vs
+                                    Budget (t/ha)</h3>
+                                <div class="flex items-center space-x-2 text-[9px] text-[#00463E]/80 font-medium">
+                                    <span class="flex items-center"><span
+                                            class="w-2 h-2 bg-[#E2E8F0] border border-slate-300 mr-1 inline-block rounded-xs"></span>Budget</span>
+                                    <span class="flex items-center"><span
+                                            class="w-2 h-2 bg-[#006D65] mr-1 inline-block rounded-xs"></span>Actual</span>
+                                </div>
+                            </div>
+                            <div class="flex-1 relative min-h-0">
+                                <canvas id="yieldChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div
+                            class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs flex-1 flex flex-col min-h-0">
+                            <div class="flex items-center justify-between mb-1">
+                                <h3 class="text-[11px] font-bold text-[#00463E] uppercase">BMP Score TM per Region–Area
+                                    · Jun–Aug</h3>
+                                <div class="flex items-center space-x-2 text-[9px] text-[#00463E]/80 font-medium">
+                                    <span class="flex items-center"><span
+                                            class="w-2 h-2 bg-[#D1FAE5] mr-1 inline-block rounded-xs"></span>Jun</span>
+                                    <span class="flex items-center"><span
+                                            class="w-2 h-2 bg-[#00D0BC] mr-1 inline-block rounded-xs"></span>Jul</span>
+                                    <span class="flex items-center"><span
+                                            class="w-2 h-2 bg-[#006D65] mr-1 inline-block rounded-xs"></span>Aug</span>
+                                </div>
+                            </div>
+                            <div class="flex-1 relative min-h-0">
+                                <canvas id="scoreChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="col-span-8 bg-white rounded-md p-2.5 border border-[#E2E8F0] shadow-2xs flex flex-col justify-between relative min-h-0">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-[12px] font-black text-slate-800 uppercase">GIS Heatmap · SUM & KAL ·
+                                    BMP TM</h3>
+                                <div class="text-[9px] text-slate-400 italic">skor BMP Aug · #rank · warna = kelas H/M/L
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center space-x-1">
+                                    <button v-for="tab in gisTabs" :key="tab.id" @click="activeGisTab = tab.id"
+                                        :class="activeGisTab === tab.id ? 'bg-[#006D65] text-white' : 'bg-[#F8FAFC] text-slate-600 hover:bg-[#E2E8F0]'"
+                                        class="px-2.5 py-1 rounded text-[10px] font-bold transition-colors">
+                                        {{ tab.name }}
+                                    </button>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <button v-for="level in levelFilters" :key="level.id"
+                                        @click="activeLevel = level.id"
+                                        :class="activeLevel === level.id ? 'bg-[#006D65] text-white' : 'bg-[#F8FAFC] text-slate-600 hover:bg-[#E2E8F0]'"
+                                        class="px-2 py-1 rounded text-[10px] font-bold transition-colors">
+                                        {{ level.name }}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+
+                                <div class="space-y-2">
+                                    <div class="text-[11px] font-black text-slate-800 flex justify-between">
+                                        <span>Sumatra</span>
+                                        <span class="text-[10px] font-normal text-slate-500">84.2% · 13 estates</span>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div v-for="areaGrp in sumatraAreas" :key="areaGrp.areaName"
+                                            class="border border-dashed border-[#E2E8F0] rounded p-1.5 bg-[#F8FAFC]/50">
+                                            <div class="text-[9px] font-bold text-slate-500 mb-1">{{ areaGrp.areaName }}
+                                            </div>
+                                            <div class="grid grid-cols-3 gap-1.5">
+                                                <div v-for="est in areaGrp.estates" :key="est.name"
+                                                    @click="selectEstate(est)"
+                                                    :class="[getEstateCardClass(est.status), selectedEstate && selectedEstate.name === est.name ? 'ring-2 ring-slate-800 ring-offset-1' : '']"
+                                                    class="p-1.5 rounded text-center shadow-2xs flex flex-col justify-between cursor-pointer transition hover:opacity-95">
+                                                    <div class="text-[10px] font-bold truncate leading-tight">{{
+                                                        est.name }}</div>
+                                                    <div class="text-[13px] font-black my-0.5 leading-none">{{
+                                                        est.score.toFixed(1) }}%</div>
+                                                    <div class="text-[8px] opacity-80 font-mono">#{{ est.rank }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <div class="text-[11px] font-black text-slate-800 flex justify-between">
+                                        <span>Kalimantan</span>
+                                        <span class="text-[10px] font-normal text-slate-500">73.3% · 12 estates</span>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div v-for="areaGrp in kalimantanAreas" :key="areaGrp.areaName"
+                                            class="border border-dashed border-[#E2E8F0] rounded p-1.5 bg-[#F8FAFC]/50">
+                                            <div class="text-[9px] font-bold text-slate-500 mb-1">{{ areaGrp.areaName }}
+                                            </div>
+                                            <div class="grid grid-cols-3 gap-1.5">
+                                                <div v-for="est in areaGrp.estates" :key="est.name"
+                                                    @click="selectEstate(est)"
+                                                    :class="[getEstateCardClass(est.status), selectedEstate && selectedEstate.name === est.name ? 'ring-2 ring-slate-800 ring-offset-1' : '']"
+                                                    class="p-1.5 rounded text-center shadow-2xs flex flex-col justify-between cursor-pointer transition hover:opacity-95">
+                                                    <div class="text-[10px] font-bold truncate leading-tight">{{
+                                                        est.name }}</div>
+                                                    <div class="text-[13px] font-black my-0.5 leading-none">{{
+                                                        est.score.toFixed(1) }}%</div>
+                                                    <div class="text-[8px] opacity-80 font-mono">#{{ est.rank }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="mt-2 p-2 border border-[#E2E8F0] bg-white rounded shadow-xs flex items-center justify-between text-[10px]">
+                            <div>
+                                <strong class="text-slate-900 font-black text-[11px]">{{ selectedEstate.name }}</strong>
+                                · BMP TM <span class="font-bold">{{ selectedEstate.score.toFixed(1) }}%</span> (<span
+                                    class="capitalize">{{ selectedEstate.status }}</span>) · #{{ selectedEstate.rank }}
+                                · yield <span class="font-bold">{{ selectedEstate.yieldVsBudget }}% vs budget</span>
+                                <div class="text-[9px] text-slate-500">Blok BMP {{ selectedEstate.blockInfo }} · {{
+                                    selectedEstate.soil }} · <span
+                                        class="text-[#006D65] font-bold cursor-pointer hover:underline">SAR klik &rarr;
+                                        BMP Block</span></div>
+                            </div>
+                            <button
+                                class="bg-[#F8FAFC] hover:bg-[#E2E8F0] text-slate-700 px-2 py-0.5 rounded text-[9px] font-bold">Details</button>
+                        </div>
+
+                        <div
+                            class="absolute right-4 top-16 flex flex-col gap-1 bg-white border border-[#E2E8F0] rounded shadow-xs p-0.5">
+                            <button
+                                class="w-6 h-6 flex items-center justify-center font-bold text-xs text-slate-600 hover:bg-[#F8FAFC] rounded">+</button>
+                            <button
+                                class="w-6 h-6 flex items-center justify-center font-bold text-xs text-slate-600 hover:bg-[#F8FAFC] rounded">&minus;</button>
+                            <button
+                                class="w-6 h-6 flex items-center justify-center text-[10px] text-slate-600 hover:bg-[#F8FAFC] rounded"><i
+                                    class="fas fa-expand"></i></button>
+                        </div>
+
+                        <div class="pt-2 border-t border-[#E2E8F0] flex items-center justify-between text-[10px]">
+                            <div class="flex items-center space-x-4">
+                                <span class="font-bold text-slate-700">Color coding:</span>
+                                <span class="flex items-center space-x-1"><span
+                                        class="w-3 h-3 bg-[#10B981] rounded-xs inline-block"></span><span
+                                        class="text-slate-600">High ≥ 80%</span></span>
+                                <span class="flex items-center space-x-1"><span
+                                        class="w-3 h-3 bg-[#F59E0B] rounded-xs inline-block"></span><span
+                                        class="text-slate-600">Mid 75–80%</span></span>
+                                <span class="flex items-center space-x-1"><span
+                                        class="w-3 h-3 bg-[#EF4444] rounded-xs inline-block"></span><span
+                                        class="text-slate-600">Low &lt; 75%</span></span>
+                                <span class="flex items-center space-x-1"><span
+                                        class="w-3 h-3 bg-[#E2E8F0] rounded-xs inline-block"></span><span
+                                        class="text-slate-600">No data</span></span>
+                                <span class="flex items-center space-x-1"><span
+                                        class="w-3 h-3 border border-slate-800 rounded-xs inline-block"></span><span
+                                        class="text-slate-600">estate terpilih</span></span>
+                            </div>
+                            <span class="text-[9px] text-slate-400 italic">Layout ilustratif — boundary & posisi estate
+                                dari GIS (data integration required). Skor, rank & warna = BMP Performance Aug
+                                (aktual).</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div v-if="currentPage === 'immature'" class="flex-1 min-h-0 flex p-3 gap-1 overflow-y-auto bg-[#F8FAFC]">
+            <aside class="w-[200px] flex-shrink-0 flex flex-col gap-3 text-xs">
+                <div
+                    class="bg-[#00463E] text-white rounded-lg p-3 border border-[#006D65] shadow-sm flex flex-col gap-2.5">
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">REGION</label>
+                        <select v-model="filters.region"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">PT</label>
+                        <select v-model="filters.pt"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">AREA</label>
+                        <select v-model="filters.area"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">ESTATE</label>
+                        <select v-model="filters.estate"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none mb-1.5">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">DIVISION</label>
+                        <select v-model="filters.division"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BLOCK</label>
+                        <select v-model="filters.block"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BLOCK TYPE</label>
+                        <select v-model="filters.blockType"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>BMP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BMP TYPE</label>
+                        <select v-model="filters.bmpType"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>Immature</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">PERIOD</label>
+                        <select v-model="filters.period"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>MTD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">MONTH</label>
+                        <select v-model="filters.month"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>Aug 2026</option>
+                        </select>
+                    </div>
+                    <div class="text-[8px] text-white/70 italic mt-1">
+                        Data: BMP Performance Aug 2026 (update 7 Okt). Hierarki filter: Region › PT › Area › Estate
+                        (requirement).
+                    </div>
+                </div>
+            </aside>
+
+            <main class="flex-1 min-h-0 flex flex-col px-3 gap-2 overflow-y-auto">
+
+                <div class="flex items-center justify-between text-xs text-slate-700 flex-shrink-0 px-1">
+                    <div class="font-bold text-[13px] tracking-tight text-[#000000]">Executive Overview · Aug 2026 (MTD)
+                        · MoM vs Jul</div>
+                    <div class="flex items-center space-x-3 text-[11px]">
+                        <div class="bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-1 rounded text-slate-600">Last updated:
+                            <strong class="text-slate-900 font-black">{{ immatureMeta.lastUpdated }}</strong>
+                        </div>
+                        <div class="bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-1 rounded text-slate-600">Months
+                            loaded: <strong class="text-slate-900 font-black">{{ immatureMeta.monthsLoaded }}</strong>
+                        </div>
+                        <div class="bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-1 rounded text-slate-600">Delayed
+                            estates: <strong class="text-slate-900 font-black">{{ immatureMeta.delayedEstates
+                                }}</strong></div>
+                        <div class="bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-1 rounded text-slate-600">Planned BMP
+                            area: <strong class="text-slate-900 font-black">{{ immatureMeta.plannedBmpArea }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-[#006D65] text-white px-4 py-2 rounded flex items-center justify-between shadow-xs flex-shrink-0">
+                    <h2 class="text-[13px] font-black tracking-wide uppercase">BMP TBM · Immature blocks</h2>
+                    <span class="text-[11px] font-semibold tracking-wide text-slate-100">8 estates · 3,649 ha · BMP
+                        score, distribusi & output vegetatif</span>
+                </div>
+
+                <div class="grid grid-cols-4 gap-2.5 flex-shrink-0">
+
+                    <div
+                        class="bg-white rounded-md p-2.5 border border-[#E2E8F0] shadow-2xs flex flex-col justify-between">
+                        <div class="text-[11px] font-bold text-[#00463E] uppercase tracking-tight">BMP Score TBM</div>
+                        <div class="flex items-baseline justify-between my-1">
+                            <span class="text-3xl font-extrabold text-[#F59E0B] tracking-tight">{{ immatureKpi.bmpScore
+                                }}%</span>
+                            <div class="text-right space-y-0.5 text-[11px] font-bold">
+                                <div class="text-[#000000]">Sumatra <span class="font-black text-[#006D65] ml-1">{{
+                                        immatureKpi.sumatraScore }}%</span> <span
+                                        class="text-[#10B981] text-[10px] ml-0.5"><i class="fas fa-caret-up"></i> {{
+                                        immatureKpi.sumatraMoM }}</span></div>
+                                <div class="text-[#000000]">Kalimantan <span class="font-black text-[#006D65] ml-1">{{
+                                        immatureKpi.kalimantanScore }}%</span> <span
+                                        class="text-[#10B981] text-[10px] ml-0.5"><i class="fas fa-caret-up"></i> {{
+                                        immatureKpi.kalimantanMoM }}</span></div>
+                            </div>
+                        </div>
+                        <div class="pt-1.5 border-t border-[#E2E8F0] flex items-center">
+                            <span class="text-[10px] font-bold bg-[#D1FAE5] text-[#10B981] px-2 py-0.5 rounded-full"><i
+                                    class="fas fa-caret-up"></i> {{ immatureKpi.momOverall }} pp MoM</span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-md p-2.5 border border-[#E2E8F0] shadow-2xs flex flex-col justify-between">
+                        <div class="text-[11px] font-bold text-[#00463E] uppercase tracking-tight">Distribution TBM
+                            (estates)</div>
+                        <div class="grid grid-cols-3 gap-2 my-1 text-center">
+                            <div class="bg-[#D1FAE5] p-1 rounded border border-[#10B981]">
+                                <div class="text-[10px] font-bold text-[#00463E]">High</div>
+                                <div class="text-lg font-black text-[#006D65] leading-none">{{ immatureDistribution.high
+                                    }}<span class="text-[10px] text-[#00463E]/70 font-normal">/8</span></div>
+                                <div class="text-[8px] text-[#00463E]/70 mt-0.5">+1 vs Jul</div>
+                            </div>
+                            <div class="bg-[#FEF3C7] p-1 rounded border border-[#F59E0B]">
+                                <div class="text-[10px] font-bold text-[#F59E0B]">Mid</div>
+                                <div class="text-lg font-black text-[#F59E0B] leading-none">{{ immatureDistribution.mid
+                                    }}<span class="text-[10px] text-[#00463E]/70 font-normal">/8</span></div>
+                                <div class="text-[8px] text-[#00463E]/70 mt-0.5">-1 vs Jul</div>
+                            </div>
+                            <div class="bg-[#FEE2E2] p-1 rounded border border-[#EF4444]">
+                                <div class="text-[10px] font-bold text-[#EF4444]">Low</div>
+                                <div class="text-lg font-black text-[#EF4444] leading-none">{{ immatureDistribution.low
+                                    }}<span class="text-[10px] text-[#00463E]/70 font-normal">/8</span></div>
+                                <div class="text-[8px] text-[#00463E]/70 mt-0.5">±0 vs Jul</div>
+                            </div>
+                        </div>
+                        <div class="text-[8px] text-[#00463E]/60">Same thresholds as TM (usulan)</div>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-md p-2.5 border border-[#E2E8F0] shadow-2xs flex flex-col justify-between">
+                        <div class="text-[11px] font-bold text-[#00463E] uppercase tracking-tight">H / M / L by Region ·
+                            TBM</div>
+                        <div class="space-y-1.5 my-1">
+                            <div v-for="reg in immatureRegionBreakdown" :key="reg.name" class="space-y-0.5">
+                                <div class="flex justify-between text-[10px] font-bold text-[#00463E]">
+                                    <span>{{ reg.name }}</span>
+                                    <span class="font-normal text-slate-600">
+                                        <strong class="text-[#10B981]">{{ reg.highCount }}/{{ reg.total }}</strong> {{
+                                        reg.highPct }}% &nbsp;
+                                        <strong class="text-[#F59E0B]">{{ reg.midCount }}/{{ reg.total }}</strong> {{
+                                        reg.midPct }}% &nbsp;
+                                        <strong class="text-[#EF4444]">{{ reg.lowCount }}/{{ reg.total }}</strong> {{
+                                        reg.lowPct }}%
+                                    </span>
+                                </div>
+                                <div
+                                    class="w-full bg-[#F8FAFC] h-1.5 rounded-full overflow-hidden flex border border-[#E2E8F0]">
+                                    <div class="bg-[#10B981] h-full" :style="{ width: reg.highBar + '%' }"></div>
+                                    <div class="bg-[#F59E0B] h-full" :style="{ width: reg.midBar + '%' }"></div>
+                                    <div class="bg-[#EF4444] h-full" :style="{ width: reg.lowBar + '%' }"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-md p-2.5 border border-[#E2E8F0] shadow-2xs flex flex-col justify-between">
+                        <div class="text-[11px] font-bold text-[#00463E] uppercase tracking-tight">Output · Vegetative
+                            (TBM)</div>
+                        <div class="grid grid-cols-3 gap-1.5 my-1 text-center">
+                            <div class="bg-[#F8FAFC] p-1.5 rounded border border-[#E2E8F0]">
+                                <div class="text-[9px] font-bold text-[#00463E]">PCS · 35%</div>
+                                <div class="text-base font-black text-slate-700 my-0.5">&mdash;</div>
+                            </div>
+                            <div class="bg-[#F8FAFC] p-1.5 rounded border border-[#E2E8F0]">
+                                <div class="text-[9px] font-bold text-[#00463E]">RL · 35%</div>
+                                <div class="text-base font-black text-slate-700 my-0.5">&mdash;</div>
+                            </div>
+                            <div class="bg-[#F8FAFC] p-1.5 rounded border border-[#E2E8F0]">
+                                <div class="text-[9px] font-bold text-[#00463E]">LA · 30%</div>
+                                <div class="text-base font-black text-slate-700 my-0.5">&mdash;</div>
+                            </div>
+                        </div>
+                        <div class="text-[8px] text-[#00463E]/60">Pengukuran umur 24 bln · data integration required
+                            (R&D)</div>
+                    </div>
+
+                </div>
+
+                <div class="grid grid-cols-12 gap-2.5 flex-shrink-0">
+
+                    <div class="col-span-5 flex flex-col gap-2.5">
+                        <div class="bg-white rounded-md p-2.5 border border-[#E2E8F0] shadow-2xs flex flex-col">
+                            <h3 class="text-[11px] font-bold text-[#00463E] uppercase mb-2">BMP Score TBM per estate ·
+                                Jun–Aug</h3>
+                            <div class="h-[220px] relative">
+                                <canvas id="immatureScoreChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-md p-2.5 border border-[#E2E8F0] shadow-2xs flex flex-col">
+                            <h3 class="text-[11px] font-bold text-[#00463E] uppercase mb-1.5">TBM estates · Aug vs Jul
+                            </h3>
+                            <div class="border border-[#E2E8F0] rounded overflow-hidden">
+                                <table class="w-full text-left border-collapse text-[10px]">
+                                    <thead class="bg-[#00463E] text-white">
+                                        <tr>
+                                            <th class="p-1.5 font-bold">Estate</th>
+                                            <th class="p-1.5 font-bold">Area</th>
+                                            <th class="p-1.5 font-bold">ha</th>
+                                            <th class="p-1.5 font-bold">Jul</th>
+                                            <th class="p-1.5 font-bold">Aug</th>
+                                            <th class="p-1.5 font-bold">MoM</th>
+                                            <th class="p-1.5 font-bold">Class</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-[#E2E8F0]">
+                                        <tr v-for="est in immatureEstatesTable" :key="est.name"
+                                            class="hover:bg-[#F8FAFC]">
+                                            <td class="p-1.5 font-bold text-slate-800">{{ est.name }}</td>
+                                            <td class="p-1.5 text-slate-600">{{ est.area }}</td>
+                                            <td class="p-1.5 text-slate-600">{{ est.ha }}</td>
+                                            <td class="p-1.5 text-slate-600">{{ est.jul }}%</td>
+                                            <td class="p-1.5 font-black text-slate-900">{{ est.aug }}%</td>
+                                            <td class="p-1.5 font-bold"
+                                                :class="est.mom.includes('+') ? 'text-[#10B981]' : 'text-[#EF4444]'">
+                                                {{ est.mom }}
+                                            </td>
+                                            <td class="p-1.5 font-bold">
+                                                <span
+                                                    :class="est.class === 'High' ? 'bg-[#D1FAE5] text-[#006D65] border border-[#10B981]' : 'bg-[#FEF3C7] text-[#F59E0B] border border-[#F59E0B]'"
+                                                    class="px-1.5 py-0.5 rounded text-[8px] inline-block">
+                                                    {{ est.class }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div
+                                class="mt-2 p-2 bg-[#FEF3C7] border border-[#F59E0B]/30 rounded text-[9px] text-slate-700">
+                                <strong class="text-[#F59E0B] font-bold">Watch list:</strong> Belida & Waringin (manual
+                                weeding / pemupukan kendala).
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="col-span-7 bg-white rounded-md p-2.5 border border-[#E2E8F0] shadow-2xs flex flex-col items-center justify-center relative text-center min-h-[465px]">
+                        <div class="absolute top-3 left-3 text-left">
+                            <h3 class="text-[12px] font-black text-slate-800 uppercase">GIS Heatmap · SUM & KAL · BMP
+                                TBM</h3>
+                            <div class="text-[9px] text-slate-400 italic">Spatial view for immature blocks</div>
+                        </div>
+                        <div class="flex flex-col items-center justify-center space-y-2 p-6">
+                            <div
+                                class="w-12 h-12 rounded-full bg-[#D1FAE5] text-[#006D65] flex items-center justify-center text-xl font-black border border-[#10B981]">
+                                <i class="fas fa-map-marked-alt"></i>
+                            </div>
+                            <div class="text-sm font-black text-slate-800 uppercase tracking-wide">GIS Block TBM View —
+                                On Progress</div>
+                            <p class="text-[11px] text-slate-500 max-w-sm">Boundary mapping and spatial scoring
+                                integration for immature estate blocks are currently under active development.</p>
+                            <span
+                                class="text-[9px] font-bold bg-[#FEF3C7] text-[#F59E0B] border border-[#F59E0B] px-2.5 py-1 rounded-full">Target
+                                Release: Q4 2026</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div v-if="currentPage === 'bmp-block'" class="flex-1 min-h-0 flex p-3 gap-1 overflow-y-auto bg-[#F8FAFC]">
+            <aside class="w-[200px] flex-shrink-0 flex flex-col gap-3 text-xs">
+                <div
+                    class="bg-[#00463E] text-white rounded-lg p-3 border border-[#006D65] shadow-sm flex flex-col gap-2.5">
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">REGION</label>
+                        <select v-model="filters.region"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">PT</label>
+                        <select v-model="filters.pt"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">AREA</label>
+                        <select v-model="filters.area"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">ESTATE</label>
+                        <select v-model="filters.estate"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none mb-1.5">
+                            <option>Waringin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">DIVISION</label>
+                        <select v-model="filters.division"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BLOCK</label>
+                        <select v-model="filters.block"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>TT 2007 BMP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BLOCK TYPE</label>
+                        <select v-model="filters.blockType"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>BMP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BMP TYPE</label>
+                        <select v-model="filters.bmpType"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>Mature</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">PERIOD</label>
+                        <select v-model="filters.period"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>YTD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">MONTH</label>
+                        <select v-model="filters.month"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>Aug 2026</option>
+                        </select>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="flex-1 min-h-0 flex flex-col px-3 gap-2 overflow-y-auto">
+                <div class="flex items-center justify-between flex-shrink-0">
+                    <div class="grid grid-cols-10 gap-2 text-[10px] flex-1">
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Estate</span>
+                            <strong class="text-slate-900 text-[13px] font-black">Waringin</strong>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-slate-400 block text-[9px]">Block</span>
+                            <strong class="text-slate-900 text-[13px] font-black">TT 2007 BMP</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Year of Planting</span>
+                            <strong class="text-slate-900 text-[11px] font-bold">2007</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Area</span>
+                            <strong class="text-slate-900 text-[11px] font-bold">&mdash;</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Plant Status</span>
+                            <strong class="text-slate-900 text-[11px] font-bold">Mature</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Soil Type</span>
+                            <div class="flex items-center space-x-1">
+                                <strong class="text-slate-900 text-[11px] font-bold">Sandy</strong>
+                                <span
+                                    class="bg-[#F59E0B] text-white text-[8px] font-extrabold px-1.5 py-0.2 rounded-full">SAR</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Topography</span>
+                            <strong class="text-slate-900 text-[11px] font-bold">&mdash;</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">No of Trees</span>
+                            <strong class="text-slate-900 text-[11px] font-bold">&mdash;</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Tree Density</span>
+                            <strong class="text-slate-900 text-[11px] font-bold">&mdash;</strong>
+                        </div>
+                    </div>
+
+                    <div class="text-right flex flex-col items-end pl-2 border-l border-[#E2E8F0]">
+                        <span class="text-slate-400 text-[9px] font-bold">BMP Score</span>
+                        <span class="text-2xl font-black text-[#EF4444] leading-none">71.5%</span>
+                    </div>
+
+                    <div class="bg-[#D1FAE5] border border-[#10B981]/30 rounded-md p-2 text-center ml-3 min-w-[140px]">
+                        <span class="text-[8px] font-bold text-slate-500 uppercase block tracking-tight">TEMPLATE
+                            LOADED</span>
+                        <strong class="text-xs font-black text-[#006D65] block">TM &ndash; Sandy</strong>
+                        <span
+                            class="bg-[#F59E0B] text-white text-[8px] font-extrabold px-2 py-0.5 rounded-full inline-block mt-0.5">SAR-treated
+                            block</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between text-[10px] flex-shrink-0 pt-1">
+                    <div class="flex items-center space-x-1">
+                        <button
+                            class="px-2.5 py-1 rounded bg-white text-slate-600 border border-[#E2E8F0] font-bold">Monthly</button>
+                        <button
+                            class="px-2.5 py-1 rounded bg-white text-slate-600 border border-[#E2E8F0] font-bold">MTD</button>
+                        <button class="px-2.5 py-1 rounded bg-[#00D0BC] text-white font-black shadow-2xs">YTD</button>
+                        <span class="text-slate-400 italic text-[9px] ml-2">Planned area &middot; Actual area &middot;
+                            Achievement rate per kategori (requirement: SOP Activity Performance for BMP Block)</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-12 gap-2 flex-shrink-0">
+                    <div
+                        class="col-span-10 bg-[#E2E8F0]/40 rounded p-1.5 flex items-center justify-between border border-[#E2E8F0]">
+                        <span class="text-[10px] font-black text-[#00463E] uppercase tracking-wider">INPUT &middot; 70%
+                            <span class="font-normal text-[9px] text-slate-500">BMP activity (5 kategori)</span></span>
+                    </div>
+                    <div
+                        class="col-span-2 bg-[#E2E8F0]/40 rounded p-1.5 flex items-center justify-between border border-[#E2E8F0]">
+                        <span class="text-[10px] font-black text-[#00463E] uppercase tracking-wider">OUTPUT &middot;
+                            30%</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-6 gap-2 flex-shrink-0">
+                    <div class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs">
+                        <div class="text-[10px] font-bold text-slate-800">Upkeep Management</div>
+                        <div class="text-[8px] text-slate-400 mb-1">weight 20%</div>
+                        <div
+                            class="grid grid-cols-3 gap-1 text-[9px] text-center pt-1 border-t border-dashed border-[#E2E8F0]">
+                            <div><span class="block text-[8px] text-slate-400">Planned</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Actual</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Ach.</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 text-right mt-1">ha</div>
+                    </div>
+
+                    <div class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs">
+                        <div class="text-[10px] font-bold text-slate-800">Soil & Water Conservation</div>
+                        <div class="text-[8px] text-slate-400 mb-1">weight 10%</div>
+                        <div
+                            class="grid grid-cols-3 gap-1 text-[9px] text-center pt-1 border-t border-dashed border-[#E2E8F0]">
+                            <div><span class="block text-[8px] text-slate-400">Planned</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Actual</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Ach.</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 text-right mt-1">ha</div>
+                    </div>
+
+                    <div class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs">
+                        <div class="text-[10px] font-bold text-slate-800">Nutrient Management</div>
+                        <div class="text-[8px] text-slate-400 mb-1">weight 30%</div>
+                        <div
+                            class="grid grid-cols-3 gap-1 text-[9px] text-center pt-1 border-t border-dashed border-[#E2E8F0]">
+                            <div><span class="block text-[8px] text-slate-400">Planned</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Actual</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Ach.</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 text-right mt-1">ha</div>
+                    </div>
+
+                    <div class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs relative">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold text-slate-800">Crop Management</span>
+                            <span class="bg-[#00463E] text-white text-[7px] font-bold px-1.5 py-0.5 rounded">A&CI
+                                40%</span>
+                        </div>
+                        <div class="text-[8px] text-slate-400 mb-1">weight 30%</div>
+                        <div
+                            class="grid grid-cols-3 gap-1 text-[9px] text-center pt-1 border-t border-dashed border-[#E2E8F0]">
+                            <div><span class="block text-[8px] text-slate-400">Planned</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Actual</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Ach.</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 text-right mt-1">ha</div>
+                    </div>
+
+                    <div class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs">
+                        <div class="text-[10px] font-bold text-slate-800">Integrated Pest & Disease</div>
+                        <div class="text-[8px] text-slate-400 mb-1">weight 10%</div>
+                        <div
+                            class="grid grid-cols-3 gap-1 text-[9px] text-center pt-1 border-t border-dashed border-[#E2E8F0]">
+                            <div><span class="block text-[8px] text-slate-400">Planned</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Actual</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Ach.</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 text-right mt-1">ha</div>
+                    </div>
+
+                    <div class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs">
+                        <div class="text-[10px] font-bold text-slate-800">Yield Gap Production</div>
+                        <div class="text-[8px] text-slate-400 mb-1">weight 100% (Output)</div>
+                        <div
+                            class="grid grid-cols-3 gap-1 text-[9px] text-center pt-1 border-t border-dashed border-[#E2E8F0]">
+                            <div><span class="block text-[8px] text-slate-400">Planned</span><strong
+                                    class="text-slate-800 font-bold">16.40</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Actual</span><strong
+                                    class="text-slate-800 font-bold">13.84</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Ach.</span><strong
+                                    class="text-[#EF4444] font-black">84.4%</strong></div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 text-right mt-1">t/ha YTD</div>
+                    </div>
+                </div>
+
+                <div class="text-[11px] font-black text-slate-800 uppercase tracking-tight pt-1">
+                    Data Table &middot; Plan vs Realization <span class="font-normal text-slate-500 capitalize">(format
+                        template TM Sandy)</span>
+                </div>
+
+                <div class="grid grid-cols-12 gap-3 pb-3">
+                    <div class="col-span-6 flex flex-col gap-3">
+                        <div class="bg-white rounded-md border border-[#E2E8F0] shadow-2xs overflow-hidden">
+                            <table class="w-full text-left border-collapse text-[10px]">
+                                <thead class="bg-[#00463E] text-white">
+                                    <tr>
+                                        <th class="p-1.5 font-bold w-[40%]">Activity</th>
+                                        <th class="p-1.5 font-bold">W %</th>
+                                        <th class="p-1.5 font-bold">Plan</th>
+                                        <th class="p-1.5 font-bold">Real</th>
+                                        <th class="p-1.5 font-bold">Ach. MTD</th>
+                                        <th class="p-1.5 font-bold">Ach. YTD</th>
+                                        <th class="p-1.5 font-bold">Score</th>
+                                        <th class="p-1.5 font-bold">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-[#E2E8F0]">
+                                    <tr class="bg-[#F8FAFC] font-bold text-[#00463E]">
+                                        <td colspan="8" class="p-1.5">Upkeep Management &middot; 20%</td>
+                                    </tr>
+                                    <tr v-for="act in bmpTableLeft" :key="act.name" class="hover:bg-[#F8FAFC]">
+                                        <td class="p-1.5 text-slate-800">{{ act.name }}</td>
+                                        <td class="p-1.5 text-slate-600">{{ act.w }}</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 font-bold"
+                                            :class="act.achYtd === '0%' ? 'text-slate-900' : (act.achYtd === '100%' ? 'text-slate-900' : 'text-slate-400')">
+                                            {{ act.achYtd }}</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 font-bold text-[9px]"
+                                            :class="act.status === 'No realization' ? 'text-[#EF4444]' : (act.status === 'Completed' ? 'text-[#10B981]' : 'text-slate-400')">
+                                            {{ act.status }}</td>
+                                    </tr>
+                                    <tr class="bg-[#F8FAFC] font-bold text-[#00463E]">
+                                        <td colspan="8" class="p-1.5">Soil and Water Conservation &middot; 10%</td>
+                                    </tr>
+                                    <tr v-for="act in bmpSoilTable" :key="act.name" class="hover:bg-[#F8FAFC]">
+                                        <td class="p-1.5 text-slate-800 flex items-center gap-1">
+                                            {{ act.name }}
+                                            <span v-if="act.sar"
+                                                class="bg-[#F59E0B] text-white text-[7px] font-extrabold px-1 rounded">SAR</span>
+                                        </td>
+                                        <td class="p-1.5 text-slate-600">{{ act.w }}</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 font-bold text-slate-900">{{ act.achMtd }}</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 font-bold text-[9px] text-[#EF4444]">{{ act.status }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="bg-white rounded-md border border-[#006D65] p-3 shadow-2xs relative">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center space-x-2">
+                                    <span
+                                        class="bg-[#00463E] text-white text-[10px] font-black px-2 py-0.5 rounded">A&CI</span>
+                                    <h4 class="text-xs font-black text-[#00463E]">BMP Assessment (A&CI Assistant)</h4>
+                                </div>
+                                <span class="text-[9px] font-bold text-[#006D65]">Crop Mgmt 40% &middot; &approx; 8.4%
+                                    dari skor final</span>
+                            </div>
+                            <div class="grid grid-cols-12 gap-2 items-center">
+                                <div class="col-span-4 border-r border-[#E2E8F0] pr-2">
+                                    <span class="text-[8px] text-slate-400 block mb-1">Skor blok (Aug)</span>
+                                    <div class="text-xl font-black text-slate-400 mb-2">&mdash;</div>
+                                    <div class="text-[8px] text-slate-500">
+                                        Last assessment: &mdash;<br>
+                                        Assessor: <span class="underline decoration-dotted">A&CI Assistant</span>
+                                    </div>
+                                </div>
+                                <div class="col-span-8 grid grid-cols-3 gap-2 text-center">
+                                    <div class="border border-[#E2E8F0] rounded p-2 bg-[#F8FAFC]">
+                                        <span class="text-[9px] font-bold text-[#00463E] block">Upkeep</span>
+                                        <strong class="text-base font-black text-slate-400 block my-1">&mdash;</strong>
+                                    </div>
+                                    <div class="border border-[#E2E8F0] rounded p-2 bg-[#F8FAFC]">
+                                        <span class="text-[9px] font-bold text-[#00463E] block">Harvesting</span>
+                                        <strong class="text-base font-black text-slate-400 block my-1">&mdash;</strong>
+                                    </div>
+                                    <div class="border border-[#E2E8F0] rounded p-2 bg-[#F8FAFC]">
+                                        <span class="text-[9px] font-bold text-[#00463E] block">Administration</span>
+                                        <strong class="text-base font-black text-slate-400 block my-1">&mdash;</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="mt-2 pt-2 border-t border-[#E2E8F0] text-[8px] text-slate-500 flex justify-between">
+                                <span>Kategori M-Assessment (PwC To-Be) &middot; DIR</span>
+                                <div><strong class="text-slate-700">Status A&CI Aug:</strong> Belum tersedia: Ulin Agro,
+                                    Kruing Agro, Meranti Agro. Waringin: tidak disebut</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-span-6 bg-white rounded-md border border-[#E2E8F0] shadow-2xs overflow-hidden">
+                        <table class="w-full text-left border-collapse text-[10px]">
+                            <thead class="bg-[#00463E] text-white">
+                                <tr>
+                                    <th class="p-1.5 font-bold w-[40%]">Activity</th>
+                                    <th class="p-1.5 font-bold">W %</th>
+                                    <th class="p-1.5 font-bold">Plan</th>
+                                    <th class="p-1.5 font-bold">Real</th>
+                                    <th class="p-1.5 font-bold">Ach. MTD</th>
+                                    <th class="p-1.5 font-bold">Ach. YTD</th>
+                                    <th class="p-1.5 font-bold">Score</th>
+                                    <th class="p-1.5 font-bold">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#E2E8F0]">
+                                <tr class="bg-[#F8FAFC] font-bold text-[#00463E]">
+                                    <td colspan="8" class="p-1.5">Nutrient Management &middot; 30%</td>
+                                </tr>
+                                <tr v-for="act in bmpNutrientTable" :key="act.name" class="hover:bg-[#F8FAFC]">
+                                    <td class="p-1.5 text-slate-800 flex items-center gap-1">
+                                        {{ act.name }}
+                                        <span v-if="act.sar"
+                                            class="bg-[#F59E0B] text-white text-[7px] font-extrabold px-1 rounded">SAR</span>
+                                    </td>
+                                    <td class="p-1.5 text-slate-600">{{ act.w }}</td>
+                                    <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    <td class="p-1.5 font-bold"
+                                        :class="act.achYtd === '0%' || act.achYtd === '49%' ? 'text-slate-900' : 'text-slate-400'">
+                                        {{ act.achYtd }}</td>
+                                    <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    <td class="p-1.5 font-bold text-[9px]"
+                                        :class="act.status === 'No realization' || act.status === 'Critical' ? 'text-[#EF4444]' : 'text-slate-400'">
+                                        {{ act.status }}</td>
+                                </tr>
+                                <tr class="bg-[#F8FAFC] font-bold text-[#00463E]">
+                                    <td colspan="8" class="p-1.5">Crop Management &middot; 30%</td>
+                                </tr>
+                                <tr v-for="act in bmpCropTable" :key="act.name" class="hover:bg-[#F8FAFC]">
+                                    <td class="p-1.5 text-slate-800">{{ act.name }}</td>
+                                    <td class="p-1.5 text-slate-600">{{ act.w }}</td>
+                                    <td class="p-1.5 text-slate-700">{{ act.plan }}</td>
+                                    <td class="p-1.5 text-slate-700">{{ act.real }}</td>
+                                    <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    <td class="p-1.5 font-bold text-slate-900">{{ act.achYtd }}</td>
+                                    <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    <td class="p-1.5 font-bold text-[9px]"
+                                        :class="act.status === 'On plan' ? 'text-[#10B981]' : (act.status === 'Behind' ? 'text-[#F59E0B]' : 'text-[#006D65]')">
+                                        {{ act.status }}</td>
+                                </tr>
+                                <tr class="bg-[#F8FAFC] font-bold text-[#00463E]">
+                                    <td colspan="8" class="p-1.5">Integrated Pest & Disease &middot; 10%</td>
+                                </tr>
+                                <tr v-for="act in bmpIpdmTable" :key="act.name" class="hover:bg-[#F8FAFC]">
+                                    <td class="p-1.5 text-slate-800">{{ act.name }}</td>
+                                    <td class="p-1.5 text-slate-600">{{ act.w }}</td>
+                                    <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    <td class="p-1.5 font-bold text-slate-900">{{ act.achMtd }}</td>
+                                    <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    <td class="p-1.5 font-bold text-[9px]"
+                                        :class="act.status === 'No realization' ? 'text-[#EF4444]' : 'text-slate-400'">
+                                        {{ act.status }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div v-if="currentPage === 'non-bmp'" class="flex-1 min-h-0 flex p-3 gap-1 overflow-y-auto bg-[#F8FAFC]">
+            <aside class="w-[200px] flex-shrink-0 flex flex-col gap-3 text-xs">
+                <div
+                    class="bg-[#00463E] text-white rounded-lg p-3 border border-[#006D65] shadow-sm flex flex-col gap-2.5">
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">REGION</label>
+                        <select v-model="filters.region"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">PT</label>
+                        <select v-model="filters.pt"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">AREA</label>
+                        <select v-model="filters.area"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">ESTATE</label>
+                        <select v-model="filters.estate"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none mb-1.5">
+                            <option>Waringin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">DIVISION</label>
+                        <select v-model="filters.division"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BLOCK</label>
+                        <select v-model="filters.block"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>TT 2007</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BLOCK TYPE</label>
+                        <select v-model="filters.blockType"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>Non-BMP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BMP TYPE</label>
+                        <select v-model="filters.bmpType"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>Mature</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">PERIOD</label>
+                        <select v-model="filters.period"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>YTD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">MONTH</label>
+                        <select v-model="filters.month"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>Aug 2026</option>
+                        </select>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="flex-1 min-h-0 flex flex-col px-3 gap-2 overflow-y-auto">
+                <div class="flex items-center justify-between flex-shrink-0">
+                    <div class="grid grid-cols-10 gap-2 text-[10px] flex-1">
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Estate</span>
+                            <strong class="text-slate-900 text-[13px] font-black">Waringin</strong>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-slate-400 block text-[9px]">Block</span>
+                            <div class="flex items-center space-x-1.5">
+                                <strong class="text-slate-900 text-[13px] font-black">TT 2007</strong>
+                                <span
+                                    class="bg-[#00463E] text-white text-[8px] font-extrabold px-1.5 py-0.2 rounded">Non-BMP</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Year of Planting</span>
+                            <strong class="text-slate-900 text-[11px] font-bold">2007</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Area</span>
+                            <strong class="text-slate-900 text-[11px] font-bold">&mdash;</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Plant Status</span>
+                            <strong class="text-slate-900 text-[11px] font-bold">Mature</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Soil Type</span>
+                            <strong class="text-slate-900 text-[11px] font-bold">Sandy</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Topography</span>
+                            <strong class="text-slate-900 text-[11px] font-bold">= BMP</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">No of Trees</span>
+                            <strong class="text-slate-900 text-[11px] font-bold">&mdash;</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9px]">Tree Density</span>
+                            <strong class="text-slate-900 text-[11px] font-bold">&mdash;</strong>
+                        </div>
+                    </div>
+
+                    <div class="text-right flex flex-col items-end pl-2 border-l border-[#E2E8F0]">
+                        <span class="text-slate-400 text-[9px] font-bold">Score</span>
+                        <span class="text-2xl font-black text-slate-400 leading-none">&mdash;</span>
+                    </div>
+
+                    <div
+                        class="bg-[#00463E]/10 border border-[#006D65]/30 rounded-md p-2 text-center ml-3 min-w-[140px]">
+                        <span class="text-[8px] font-bold text-slate-500 uppercase block tracking-tight">TEMPLATE
+                            LOADED</span>
+                        <strong class="text-xs font-black text-[#006D65] block">TM &ndash; Sandy</strong>
+                        <span
+                            class="bg-[#00463E] text-white text-[8px] font-extrabold px-2 py-0.5 rounded-full inline-block mt-0.5">Non-BMP
+                            &middot; pembanding</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between text-[10px] flex-shrink-0 pt-1">
+                    <div class="flex items-center space-x-1">
+                        <button
+                            class="px-2.5 py-1 rounded bg-white text-slate-600 border border-[#E2E8F0] font-bold">Monthly</button>
+                        <button
+                            class="px-2.5 py-1 rounded bg-white text-slate-600 border border-[#E2E8F0] font-bold">MTD</button>
+                        <button class="px-2.5 py-1 rounded bg-[#00D0BC] text-white font-black shadow-2xs">YTD</button>
+                        <span class="text-slate-400 italic text-[9px] ml-2">Bobot & format sama dengan BMP Block. Blok
+                            pembanding: Non-BMP dengan TT, soil type & topografi sama (TT 2007 &middot; Sandy).</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-12 gap-2 flex-shrink-0">
+                    <div
+                        class="col-span-10 bg-[#E2E8F0]/40 rounded p-1.5 flex items-center justify-between border border-[#E2E8F0]">
+                        <span class="text-[10px] font-black text-[#00463E] uppercase tracking-wider">INPUT &middot; 70%
+                            <span class="font-normal text-[9px] text-slate-500">BMP activity (5 kategori)</span></span>
+                    </div>
+                    <div
+                        class="col-span-2 bg-[#E2E8F0]/40 rounded p-1.5 flex items-center justify-between border border-[#E2E8F0]">
+                        <span class="text-[10px] font-black text-[#00463E] uppercase tracking-wider">OUTPUT &middot;
+                            30%</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-6 gap-2 flex-shrink-0">
+                    <div class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs">
+                        <div class="text-[10px] font-bold text-slate-800">Upkeep Management</div>
+                        <div class="text-[8px] text-slate-400 mb-1">weight 20%</div>
+                        <div
+                            class="grid grid-cols-3 gap-1 text-[9px] text-center pt-1 border-t border-dashed border-[#E2E8F0]">
+                            <div><span class="block text-[8px] text-slate-400">Planned</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Actual</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Ach.</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 flex justify-between mt-1"><span>ha</span><span>BMP ach.:
+                                &mdash;</span></div>
+                    </div>
+
+                    <div class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs">
+                        <div class="text-[10px] font-bold text-slate-800">Soil & Water Conservation</div>
+                        <div class="text-[8px] text-slate-400 mb-1">weight 10%</div>
+                        <div
+                            class="grid grid-cols-3 gap-1 text-[9px] text-center pt-1 border-t border-dashed border-[#E2E8F0]">
+                            <div><span class="block text-[8px] text-slate-400">Planned</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Actual</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Ach.</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 flex justify-between mt-1"><span>ha</span><span>BMP ach.:
+                                &mdash;</span></div>
+                    </div>
+
+                    <div class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs">
+                        <div class="text-[10px] font-bold text-slate-800">Nutrient Management</div>
+                        <div class="text-[8px] text-slate-400 mb-1">weight 30%</div>
+                        <div
+                            class="grid grid-cols-3 gap-1 text-[9px] text-center pt-1 border-t border-dashed border-[#E2E8F0]">
+                            <div><span class="block text-[8px] text-slate-400">Planned</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Actual</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Ach.</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 flex justify-between mt-1"><span>ha</span><span>BMP ach.:
+                                &mdash;</span></div>
+                    </div>
+
+                    <div class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs relative">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold text-slate-800">Crop Management</span>
+                            <span class="bg-[#00463E] text-white text-[7px] font-bold px-1.5 py-0.5 rounded">A&CI
+                                40%</span>
+                        </div>
+                        <div class="text-[8px] text-slate-400 mb-1">weight 30%</div>
+                        <div
+                            class="grid grid-cols-3 gap-1 text-[9px] text-center pt-1 border-t border-dashed border-[#E2E8F0]">
+                            <div><span class="block text-[8px] text-slate-400">Planned</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Actual</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Ach.</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 flex justify-between mt-1"><span>ha</span><span>BMP ach.:
+                                &mdash;</span></div>
+                    </div>
+
+                    <div class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs">
+                        <div class="text-[10px] font-bold text-slate-800">Integrated Pest & Disease</div>
+                        <div class="text-[8px] text-slate-400 mb-1">weight 10%</div>
+                        <div
+                            class="grid grid-cols-3 gap-1 text-[9px] text-center pt-1 border-t border-dashed border-[#E2E8F0]">
+                            <div><span class="block text-[8px] text-slate-400">Planned</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Actual</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Ach.</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 flex justify-between mt-1"><span>ha</span><span>BMP ach.:
+                                &mdash;</span></div>
+                    </div>
+
+                    <div class="bg-white rounded-md p-2 border border-[#E2E8F0] shadow-2xs">
+                        <div class="text-[10px] font-bold text-slate-800">Yield Gap Production</div>
+                        <div class="text-[8px] text-slate-400 mb-1">weight 100% (Output)</div>
+                        <div
+                            class="grid grid-cols-3 gap-1 text-[9px] text-center pt-1 border-t border-dashed border-[#E2E8F0]">
+                            <div><span class="block text-[8px] text-slate-400">Planned</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Actual</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                            <div><span class="block text-[8px] text-slate-400">Ach.</span><strong
+                                    class="text-slate-700">&mdash;</strong></div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 flex justify-between mt-1"><span>t/ha YTD</span><span>BMP
+                                ach.: 84.4%</span></div>
+                    </div>
+                </div>
+
+                <div
+                    class="flex items-center justify-between text-[11px] font-black text-slate-800 uppercase tracking-tight pt-1">
+                    <span>Data Table &middot; Plan vs Realization <span
+                            class="font-normal text-slate-500 capitalize">(format & bobot template TM
+                            Sandy)</span></span>
+                    <span class="text-[10px] font-bold text-[#006D65] lowercase">kolom BMP Ach. = blok TT 2007 BMP
+                        (pembanding)</span>
+                </div>
+
+                <div class="grid grid-cols-12 gap-3 pb-3">
+                    <div class="col-span-6 flex flex-col gap-3">
+                        <div class="bg-white rounded-md border border-[#E2E8F0] shadow-2xs overflow-hidden">
+                            <table class="w-full text-left border-collapse text-[10px]">
+                                <thead class="bg-[#00463E] text-white">
+                                    <tr>
+                                        <th class="p-1.5 font-bold w-[35%]">Activity</th>
+                                        <th class="p-1.5 font-bold">W %</th>
+                                        <th class="p-1.5 font-bold">Plan</th>
+                                        <th class="p-1.5 font-bold">Real</th>
+                                        <th class="p-1.5 font-bold">Ach. MTD</th>
+                                        <th class="p-1.5 font-bold">Ach. YTD</th>
+                                        <th class="p-1.5 font-bold">Score</th>
+                                        <th class="p-1.5 font-bold">BMP Ach.</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-[#E2E8F0]">
+                                    <tr class="bg-[#F8FAFC] font-bold text-[#00463E]">
+                                        <td colspan="8" class="p-1.5">Upkeep Management &middot; 20%</td>
+                                    </tr>
+                                    <tr v-for="act in nonBmpTableLeft" :key="act.name" class="hover:bg-[#F8FAFC]">
+                                        <td class="p-1.5 text-slate-800">{{ act.name }}</td>
+                                        <td class="p-1.5 text-slate-600">{{ act.w }}</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 font-bold"
+                                            :class="act.bmpAch === '0%' || act.bmpAch === '100% MTD' ? 'text-[#006D65]' : 'text-slate-400'">
+                                            {{ act.bmpAch }}</td>
+                                    </tr>
+                                    <tr class="bg-[#F8FAFC] font-bold text-[#00463E]">
+                                        <td colspan="8" class="p-1.5">Soil and Water Conservation &middot; 10%</td>
+                                    </tr>
+                                    <tr v-for="act in nonBmpSoilTable" :key="act.name" class="hover:bg-[#F8FAFC]">
+                                        <td class="p-1.5 text-slate-800">{{ act.name }}</td>
+                                        <td class="p-1.5 text-slate-600">{{ act.w }}</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 font-bold text-[#006D65]">{{ act.bmpAch }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="bg-white rounded-md border border-[#006D65] p-3 shadow-2xs">
+                            <h4 class="text-xs font-black text-[#00463E] mb-2">BMP vs Non-BMP &middot; bobot sama <span
+                                    class="font-normal text-[9px] text-slate-500 font-normal">match: TT 2007 &middot;
+                                    Sandy &middot; topografi sama</span></h4>
+                            <table class="w-full text-left border-collapse text-[10px]">
+                                <thead class="bg-[#00463E] text-white">
+                                    <tr>
+                                        <th class="p-1.5 font-bold w-[40%]">KPI</th>
+                                        <th class="p-1.5 font-bold">BMP &middot; TT 2007</th>
+                                        <th class="p-1.5 font-bold">Non-BMP &middot; TT 2007</th>
+                                        <th class="p-1.5 font-bold">Gap</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-[#E2E8F0]">
+                                    <tr>
+                                        <td class="p-1.5 text-slate-800 font-medium">Skor (Input 70% + Output 30%)</td>
+                                        <td class="p-1.5 font-black text-[#006D65]">71.5%</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-1.5 text-slate-800 font-medium">Yield YTD (t/ha)</td>
+                                        <td class="p-1.5 font-black text-[#006D65]">13.84</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-1.5 text-slate-800 font-medium">Yield vs budget</td>
+                                        <td class="p-1.5 font-black text-[#006D65]">84.4%</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-1.5 text-slate-800 font-medium">Harvesting round (rotasi YTD)</td>
+                                        <td class="p-1.5 font-black text-[#006D65]">26 / 24</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="col-span-6 flex flex-col gap-3">
+                        <div class="bg-white rounded-md border border-[#E2E8F0] shadow-2xs overflow-hidden">
+                            <table class="w-full text-left border-collapse text-[10px]">
+                                <thead class="bg-[#00463E] text-white">
+                                    <tr>
+                                        <th class="p-1.5 font-bold w-[35%]">Activity</th>
+                                        <th class="p-1.5 font-bold">W %</th>
+                                        <th class="p-1.5 font-bold">Plan</th>
+                                        <th class="p-1.5 font-bold">Real</th>
+                                        <th class="p-1.5 font-bold">Ach. MTD</th>
+                                        <th class="p-1.5 font-bold">Ach. YTD</th>
+                                        <th class="p-1.5 font-bold">Score</th>
+                                        <th class="p-1.5 font-bold">BMP Ach.</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-[#E2E8F0]">
+                                    <tr class="bg-[#F8FAFC] font-bold text-[#00463E]">
+                                        <td colspan="8" class="p-1.5">Nutrient Management &middot; 30%</td>
+                                    </tr>
+                                    <tr v-for="act in nonBmpNutrientTable" :key="act.name" class="hover:bg-[#F8FAFC]">
+                                        <td class="p-1.5 text-slate-800">{{ act.name }}</td>
+                                        <td class="p-1.5 text-slate-600">{{ act.w }}</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 font-bold"
+                                            :class="act.bmpAch === '0%' || act.bmpAch === '49%' ? 'text-[#006D65]' : 'text-slate-400'">
+                                            {{ act.bmpAch }}</td>
+                                    </tr>
+                                    <tr class="bg-[#F8FAFC] font-bold text-[#00463E]">
+                                        <td colspan="8" class="p-1.5">Crop Management &middot; 30%</td>
+                                    </tr>
+                                    <tr v-for="act in nonBmpCropTable" :key="act.name" class="hover:bg-[#F8FAFC]">
+                                        <td class="p-1.5 text-slate-800">{{ act.name }}</td>
+                                        <td class="p-1.5 text-slate-600">{{ act.w }}</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 font-bold"
+                                            :class="act.bmpAch === '108%' || act.bmpAch === '90%' ? 'text-[#006D65]' : 'text-slate-400'">
+                                            {{ act.bmpAch }}</td>
+                                    </tr>
+                                    <tr class="bg-[#F8FAFC] font-bold text-[#00463E]">
+                                        <td colspan="8" class="p-1.5">Integrated Pest & Disease &middot; 10%</td>
+                                    </tr>
+                                    <tr v-for="act in nonBmpIpdmTable" :key="act.name" class="hover:bg-[#F8FAFC]">
+                                        <td class="p-1.5 text-slate-800">{{ act.name }}</td>
+                                        <td class="p-1.5 text-slate-600">{{ act.w }}</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 text-slate-400">&mdash;</td>
+                                        <td class="p-1.5 font-bold"
+                                            :class="act.bmpAch === '0% MTD' ? 'text-[#006D65]' : 'text-slate-400'">{{
+                                            act.bmpAch }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="bg-white rounded-md border border-[#E2E8F0] p-3 shadow-2xs border-dashed">
+                            <h4 class="text-[10px] font-black text-slate-700 uppercase tracking-wide mb-1"><i
+                                    class="fas fa-info-circle text-[#006D65] mr-1"></i> Data Integration Required</h4>
+                            <p class="text-[9px] text-slate-500 leading-normal">Data blok Non-BMP (plan & realisasi per
+                                aktivitas, yield per blok) belum ada di file performance &mdash; ditarik dari ERP/OMS
+                                per blok. Pemilihan blok pembanding otomatis dari master blok GIS (TT, soil type,
+                                topografi).</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div v-if="currentPage === 'gap-analysis'" class="flex-1 min-h-0 flex p-3 gap-1 overflow-y-auto bg-[#F8FAFC]">
+            <aside class="w-[200px] flex-shrink-0 flex flex-col gap-3 text-xs">
+                <div
+                    class="bg-[#00463E] text-white rounded-lg p-3 border border-[#006D65] shadow-sm flex flex-col gap-2.5">
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">REGION</label>
+                        <select v-model="filters.region"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">PT</label>
+                        <select v-model="filters.pt"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">AREA</label>
+                        <select v-model="filters.area"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">ESTATE</label>
+                        <select v-model="filters.estate"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none mb-1.5">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">DIVISION</label>
+                        <select v-model="filters.division"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BLOCK</label>
+                        <select v-model="filters.block"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BLOCK TYPE</label>
+                        <select v-model="filters.blockType"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>BMP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">BMP TYPE</label>
+                        <select v-model="filters.bmpType"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>Mature</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">PERIOD</label>
+                        <select v-model="filters.period"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>MTD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white uppercase text-[9px] font-bold mb-1">MONTH</label>
+                        <select v-model="filters.month"
+                            class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
+                            <option>Aug 2026</option>
+                        </select>
+                    </div>
+                    <div class="text-[8px] text-white/70 italic mt-1">
+                        Data: BMP Performance Aug 2026 (update 7 Okt). Hierarki filter: Region › PT › Area › Estate.
+                    </div>
+                </div>
+            </aside>
+
+            <main class="flex-1 min-h-0 flex flex-col px-3 gap-2 overflow-y-auto">
+                <div class="grid grid-cols-3 gap-3 pb-3 flex-1">
+                    <!-- Top 10 Risk Estate -->
+                    <div
+                        class="bg-white rounded-lg p-3 border border-[#10B981]/40 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-xs font-black text-slate-800 uppercase tracking-wide mb-3">Top 10 Risk
+                                Estate</h3>
+                            <div class="border border-[#E2E8F0] rounded overflow-hidden">
+                                <table class="w-full text-left border-collapse text-[10px]">
+                                    <thead class="bg-[#00463E] text-white">
+                                        <tr>
+                                            <th class="p-2 font-bold w-[40%]">Estate</th>
+                                            <th class="p-2 font-bold text-center">Score</th>
+                                            <th class="p-2 font-bold text-center">Risk Point</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-[#E2E8F0]">
+                                        <tr v-for="est in topRiskEstates" :key="est.estate" class="hover:bg-[#F8FAFC]">
+                                            <td class="p-2 font-bold text-slate-800">{{ est.estate }}</td>
+                                            <td class="p-2 text-center">
+                                                <span
+                                                    class="bg-[#FEE2E2] text-[#EF4444] font-black px-2 py-0.5 rounded inline-block">{{
+                                                    est.score }}</span>
+                                            </td>
+                                            <td class="p-2 text-center font-bold"
+                                                :class="est.risk ? 'text-[#EF4444]' : 'text-slate-400'">
+                                                {{ est.risk || '—' }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 italic mt-2">
+                            Score = BMP score TM Aug (aktual). Risk Point: data integration required (driver dari
+                            sistem: fertilizer, workforce, harvesting).
+                        </div>
+                    </div>
+
+                    <!-- Top 10 Delayed Activity -->
+                    <div
+                        class="bg-white rounded-lg p-3 border border-[#10B981]/40 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-xs font-black text-slate-800 uppercase tracking-wide mb-3">Top 10 Delayed
+                                Activity</h3>
+                            <div class="border border-[#E2E8F0] rounded overflow-hidden">
+                                <table class="w-full text-left border-collapse text-[10px]">
+                                    <thead class="bg-[#00463E] text-white">
+                                        <tr>
+                                            <th class="p-2 font-bold w-[60%]">Activity</th>
+                                            <th class="p-2 font-bold text-center">Delay</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-[#E2E8F0]">
+                                        <tr v-for="(act, index) in topDelayedActivities" :key="index"
+                                            class="hover:bg-[#F8FAFC]">
+                                            <td class="p-2 font-bold"
+                                                :class="index === 0 ? 'text-[#EF4444]' : 'text-slate-400'">{{
+                                                act.activity }}</td>
+                                            <td class="p-2 text-center font-bold"
+                                                :class="index === 0 ? 'text-[#EF4444]' : 'text-slate-400'">
+                                                <span v-if="index === 0"
+                                                    class="bg-[#FEE2E2] px-2 py-0.5 rounded inline-block">{{ act.delay
+                                                    }}</span>
+                                                <span v-else>{{ act.delay }}</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 italic mt-2">
+                            Delay = hari sejak due date rencana (OMS) tanpa realisasi · data integration required.
+                        </div>
+                    </div>
+
+                    <!-- Major Improvement Opportunity -->
+                    <div
+                        class="bg-white rounded-lg p-3 border border-[#10B981]/40 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-xs font-black text-slate-800 uppercase tracking-wide mb-3">Major Improvement
+                                Opportunity</h3>
+                            <div class="border border-[#E2E8F0] rounded overflow-hidden">
+                                <table class="w-full text-left border-collapse text-[10px]">
+                                    <thead class="bg-[#00463E] text-white">
+                                        <tr>
+                                            <th class="p-2 font-bold w-[60%]">Category</th>
+                                            <th class="p-2 font-bold text-center">Gap (BGT vs. ACT)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-[#E2E8F0]">
+                                        <tr v-for="opp in majorImprovements" :key="opp.category"
+                                            class="hover:bg-[#F8FAFC]">
+                                            <td class="p-2 font-bold text-slate-800">{{ opp.category }}</td>
+                                            <td class="p-2 text-center font-bold"
+                                                :class="opp.gap.includes('-') ? 'text-[#EF4444]' : 'text-slate-400'">
+                                                <span v-if="opp.gap.includes('-')"
+                                                    class="bg-[#FEE2E2] px-2 py-0.5 rounded inline-block">{{ opp.gap
+                                                    }}</span>
+                                                <span v-else>{{ opp.gap }}</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="text-[8px] text-slate-400 italic mt-2">
+                            Gap = actual vs budget per kategori (Tenaga Kerja, Manuring, OMS, SAP) · data integration
+                            required.
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    currentPage: 'mature',
+                    pages: [
+                        { id: 'mature', name: 'OVERVIEW BMP MATURE' },
+                        { id: 'immature', name: 'OVERVIEW BMP IMMATURE' },
+                        { id: 'bmp-block', name: 'BMP BLOCK' },
+                        { id: 'non-bmp', name: 'NON-BMP BLOCK' },
+                        { id: 'gap-analysis', name: 'GAP ANALYSIS' }
+                    ],
+                    filters: {
+                        region: 'All',
+                        pt: 'All',
+                        area: 'All',
+                        estate: 'All',
+                        division: 'All',
+                        block: 'All',
+                        blockType: 'BMP',
+                        bmpType: 'Mature',
+                        period: 'MTD',
+                        month: 'Aug 2026'
+                    },
+
+                    meta: {
+                        lastUpdated: '7 Okt 2026',
+                        monthsLoaded: 'Jun · Jul · Aug',
+                        delayedEstates: '—',
+                        plannedBmpArea: '—'
+                    },
+                    kpi: {
+                        bmpScore: 78.1,
+                        sumatraScore: 84.2,
+                        kalimantanScore: 73.3,
+                        sumatraMoM: '1.0',
+                        kalimantanMoM: '0.8',
+                        momOverall: '0.5'
+                    },
+                    distribution: {
+                        high: 9,
+                        mid: 5,
+                        low: 11
+                    },
+                    production: {
+                        yieldYtd: '16.10',
+                        budget: '15.99',
+                        target: '25.61',
+                        vsBudget: '100.7',
+                        vsBudgetPp: '2.0'
+                    },
+                    yieldStatus: {
+                        onTrack: 12,
+                        atRisk: 7,
+                        below: 6
+                    },
+                    regionBreakdown: [
+                        { name: 'Sumatra', total: 13, highCount: 7, highPct: 54, highDiff: '-1', highBar: 54, midCount: 2, midPct: 15, midDiff: '+1', midBar: 15, lowCount: 4, lowPct: 31, lowBar: 31 },
+                        { name: 'Kalimantan', total: 12, highCount: 2, highPct: 17, highDiff: '+1', highBar: 17, midCount: 3, midPct: 25, midDiff: '-1', midBar: 25, lowCount: 7, lowPct: 58, lowBar: 58 }
+                    ],
+                    activeGisTab: 'ranking',
+                    gisTabs: [
+                        { id: 'ranking', name: 'BMP Scoring (Ranking)' },
+                        { id: 'ffb-prod', name: 'FFB Production' },
+                        { id: 'ffb-yield', name: 'FFB Yield' },
+                        { id: 'achievement', name: 'Achievement Rate' }
+                    ],
+                    activeLevel: 'estate',
+                    levelFilters: [
+                        { id: 'region', name: 'Region' },
+                        { id: 'area', name: 'Area' },
+                        { id: 'estate', name: 'Estate' }
+                    ],
+                    selectedEstate: {
+                        name: 'Waringin',
+                        score: 71.5,
+                        status: 'low',
+                        rank: 19,
+                        yieldVsBudget: 84.4,
+                        blockInfo: 'TT 2007',
+                        soil: 'Sandy'
+                    },
+                    sumatraAreas: [
+                        {
+                            areaName: 'Area 1',
+                            estates: [
+                                { name: 'Sumber Sawit', score: 91.6, rank: 2, status: 'high', yieldVsBudget: 102.1, blockInfo: 'TT 2008', soil: 'Clay' },
+                                { name: 'Hikmah Tiga', score: 91.6, rank: 3, status: 'high', yieldVsBudget: 104.5, blockInfo: 'TT 2010', soil: 'Loam' },
+                                { name: 'Belida', score: 91.3, rank: 4, status: 'high', yieldVsBudget: 101.8, blockInfo: 'TT 2009', soil: 'Sandy Loam' },
+                                { name: 'Mesuji', score: 90.2, rank: 5, status: 'high', yieldVsBudget: 99.4, blockInfo: 'TT 2007', soil: 'Clay' },
+                                { name: 'IPBD', score: 82.5, rank: 9, status: 'high', yieldVsBudget: 98.2, blockInfo: 'TT 2011', soil: 'Peat' },
+                                { name: 'Hikmah Lima', score: 69.7, rank: 21, status: 'low', yieldVsBudget: 82.0, blockInfo: 'TT 2006', soil: 'Sandy' }
+                            ]
+                        },
+                        {
+                            areaName: 'Area 2',
+                            estates: [
+                                { name: 'Mega Terang', score: 92.3, rank: 1, status: 'high', yieldVsBudget: 108.3, blockInfo: 'TT 2012', soil: 'Clay' },
+                                { name: 'Hikmah Empat', score: 74.0, rank: 16, status: 'low', yieldVsBudget: 86.5, blockInfo: 'TT 2008', soil: 'Sandy' }
+                            ]
+                        },
+                        {
+                            areaName: 'Area 3',
+                            estates: [
+                                { name: 'Tanjung Sari', score: 65.3, rank: 24, status: 'low', yieldVsBudget: 78.4, blockInfo: 'TT 2005', soil: 'Sandy' }
+                            ]
+                        },
+                        {
+                            areaName: 'Area 4',
+                            estates: [
+                                { name: 'Puncak Terang', score: 84.4, rank: 7, status: 'high', yieldVsBudget: 101.0, blockInfo: 'TT 2011', soil: 'Loam' },
+                                { name: 'Limau Kesturi', score: 78.6, rank: 11, status: 'mid', yieldVsBudget: 94.2, blockInfo: 'TT 2010', soil: 'Clay' },
+                                { name: 'Nawa Surya', score: 77.9, rank: 12, status: 'mid', yieldVsBudget: 92.8, blockInfo: 'TT 2009', soil: 'Loam' },
+                                { name: 'Jaya Permai', score: 72.6, rank: 18, status: 'low', yieldVsBudget: 85.1, blockInfo: 'TT 2007', soil: 'Sandy' }
+                            ]
+                        }
+                    ],
+                    kalimantanAreas: [
+                        {
+                            areaName: 'Area 1',
+                            estates: [
+                                { name: 'Rauk Naga', score: 85.6, rank: 6, status: 'high', yieldVsBudget: 103.2, blockInfo: 'TT 2010', soil: 'Clay' },
+                                { name: 'Sungai Sagu', score: 84.1, rank: 8, status: 'high', yieldVsBudget: 100.5, blockInfo: 'TT 2011', soil: 'Loam' },
+                                { name: 'Sahara', score: 79.6, rank: 10, status: 'mid', yieldVsBudget: 95.0, blockInfo: 'TT 2009', soil: 'Clay' },
+                                { name: 'Baboti', score: 76.0, rank: 13, status: 'mid', yieldVsBudget: 91.2, blockInfo: 'TT 2008', soil: 'Loam' },
+                                { name: 'Telaga Bintang', score: 74.2, rank: 15, status: 'low', yieldVsBudget: 88.0, blockInfo: 'TT 2007', soil: 'Sandy' },
+                                { name: 'Waringin', score: 71.5, rank: 19, status: 'low', yieldVsBudget: 84.4, blockInfo: 'TT 2007', soil: 'Sandy' }
+                            ]
+                        },
+                        {
+                            areaName: 'Area 2',
+                            estates: [
+                                { name: 'Meranti Agro', score: 72.9, rank: 17, status: 'low', yieldVsBudget: 87.3, blockInfo: 'TT 2008', soil: 'Sandy' },
+                                { name: 'Kruing Agro', score: 71.2, rank: 20, status: 'low', yieldVsBudget: 83.9, blockInfo: 'TT 2006', soil: 'Sandy' },
+                                { name: 'Ulin Agro', score: 69.2, rank: 22, status: 'low', yieldVsBudget: 81.5, blockInfo: 'TT 2005', soil: 'Peat' }
+                            ]
+                        },
+                        {
+                            areaName: 'Area 3',
+                            estates: [
+                                { name: 'Bukit Subur', score: 76.0, rank: 14, status: 'mid', yieldVsBudget: 90.1, blockInfo: 'TT 2009', soil: 'Loam' },
+                                { name: 'Bukit Makmur', score: 67.7, rank: 23, status: 'low', yieldVsBudget: 79.8, blockInfo: 'TT 2006', soil: 'Sandy' },
+                                { name: 'Bukit Raya', score: 58.4, rank: 25, status: 'low', yieldVsBudget: 72.0, blockInfo: 'TT 2004', soil: 'Sandy' }
+                            ]
+                        }
+                    ],
+
+                    immatureMeta: {
+                        lastUpdated: '7 Okt 2026',
+                        monthsLoaded: 'Jun · Jul · Aug',
+                        delayedEstates: '—',
+                        plannedBmpArea: '—'
+                    },
+                    immatureKpi: {
+                        bmpScore: 87.9,
+                        sumatraScore: 90.8,
+                        kalimantanScore: 79.7,
+                        sumatraMoM: '2.0',
+                        kalimantanMoM: '1.2',
+                        momOverall: '1.8'
+                    },
+                    immatureDistribution: {
+                        high: 6,
+                        mid: 2,
+                        low: 0
+                    },
+                    immatureRegionBreakdown: [
+                        { name: 'Sumatra', total: 6, highCount: 5, highPct: 83, midCount: 1, midPct: 17, lowCount: 0, lowPct: 0, highBar: 83, midBar: 17, lowBar: 0 },
+                        { name: 'Kalimantan', total: 2, highCount: 1, highPct: 50, midCount: 1, midPct: 50, lowCount: 0, lowPct: 0, highBar: 50, midBar: 50, lowBar: 0 }
+                    ],
+                    immatureEstatesTable: [
+                        { name: 'Gading Jaya', area: 'SUM-2', ha: 543, jul: 87.4, aug: 99.3, mom: '+11.9', class: 'High' },
+                        { name: 'Hikmah Satu', area: 'SUM-2', ha: 1029, jul: 96.7, aug: 95.2, mom: '-1.5', class: 'High' },
+                        { name: 'Hikmah Dua', area: 'SUM-2', ha: 199, jul: 77.2, aug: 86.0, mom: '+8.8', class: 'High' },
+                        { name: 'Sumber Sawit', area: 'SUM-1', ha: 383, jul: 80.1, aug: 84.6, mom: '+4.5', class: 'High' },
+                        { name: 'IPBS', area: 'SUM-1', ha: 189, jul: 81.0, aug: 81.8, mom: '+0.8', class: 'High' },
+                        { name: 'Sungai Sagu', area: 'KAL-1', ha: 850, jul: 78.7, aug: 80.2, mom: '+1.5', class: 'High' },
+                        { name: 'Belida', area: 'SUM-1', ha: 347, jul: 87.5, aug: 78.8, mom: '-8.7', class: 'Mid' },
+                        { name: 'Waringin', area: 'KAL-1', ha: 109, jul: 76.4, aug: 75.6, mom: '-0.8', class: 'Mid' }
+                    ],
+
+                    bmpTableLeft: [
+                        { name: 'Circle Weeding – Manual', w: '15', achYtd: '—', status: '—' },
+                        { name: 'Inter-row Weeding – Manual', w: '10', achYtd: '—', status: '—' },
+                        { name: 'Path Cleaning – Manual', w: '10', achYtd: '0%', status: 'No realization' },
+                        { name: 'Circle & Path W. – Chem', w: '15', achYtd: '—', status: '—' },
+                        { name: 'Path Weeding – Chemical', w: '5', achYtd: '0%', status: 'No realization' },
+                        { name: 'Selective Weeding – Chemical', w: '15', achYtd: '—', status: '—' },
+                        { name: 'Spot Spraying (Imperata)', w: '5', achYtd: '0%', status: 'No realization' },
+                        { name: 'Wiping (Imperata)', w: '10', achYtd: '0%', status: 'No realization' },
+                        { name: 'Pruning', w: '15', achYtd: '100%', status: 'Completed' }
+                    ],
+                    bmpSoilTable: [
+                        { name: 'Foot Bridges', w: '50', achMtd: '0%', status: 'No realization', sar: false },
+                        { name: 'Trench Maintenance', w: '50', achMtd: '—', status: '—', sar: false },
+                        { name: 'SAR mounding 4 layer (L4)', w: '—', achMtd: '—', status: '—', sar: true }
+                    ],
+                    bmpNutrientTable: [
+                        { name: 'Urea', w: '10', achYtd: '0%', status: 'No realization', sar: false },
+                        { name: 'Dolomite', w: '10', achYtd: '—', status: '—', sar: false },
+                        { name: 'Borate', w: '15', achYtd: '49%', status: 'Critical', sar: false },
+                        { name: 'CuSO4', w: '15', achYtd: '—', status: '—', sar: false },
+                        { name: 'NPK', w: '30', achYtd: '—', status: '—', sar: true },
+                        { name: 'EFB', w: '20', achYtd: '—', status: '—', sar: true },
+                        { name: 'Mineral soil (L2)', w: '—', achYtd: '—', status: '—', sar: true }
+                    ],
+                    bmpCropTable: [
+                        { name: 'Harvesting Round', w: '30', plan: '24', real: '26', achYtd: '108%', status: 'On plan' },
+                        { name: 'Man Power Planing', w: '30', plan: '49', real: '44', achYtd: '90%', status: 'Behind' },
+                        { name: 'A&CI Assessment A&CI', w: '40', plan: '—', real: '—', achYtd: '—', status: 'Pending' }
+                    ],
+                    bmpIpdmTable: [
+                        { name: 'Planting Beneficial Plant', w: '20', achMtd: '0%', status: 'No realization' },
+                        { name: 'Leaf Pest Census', w: '20', achMtd: '—', status: '—' },
+                        { name: 'Oryctes Pest Census', w: '15', achMtd: '—', status: '—' },
+                        { name: 'Rodent Pest Census', w: '15', achMtd: '—', status: '—' },
+                        { name: 'Pest & Disease Control', w: '15', achMtd: '—', status: '—' },
+                        { name: 'Gupon (1:25)', w: '15', achMtd: '—', status: '—' }
+                    ],
+                    nonBmpTableLeft: [
+                        { name: 'Circle Weeding – Manual', w: '15', bmpAch: '—' },
+                        { name: 'Inter-row Weeding – Manual', w: '10', bmpAch: '—' },
+                        { name: 'Path Cleaning – Manual', w: '10', bmpAch: '0%' },
+                        { name: 'Circle & Path W. – Chem', w: '15', bmpAch: '—' },
+                        { name: 'Path Weeding – Chemical', w: '5', bmpAch: '0%' },
+                        { name: 'Selective Weeding – Chemical', w: '15', bmpAch: '—' },
+                        { name: 'Spot Spraying (Imperata)', w: '5', bmpAch: '0%' },
+                        { name: 'Wiping (Imperata)', w: '10', bmpAch: '0%' },
+                        { name: 'Pruning', w: '15', bmpAch: '100% MTD' }
+                    ],
+                    nonBmpSoilTable: [
+                        { name: 'Foot Bridges', w: '50', bmpAch: '0% MTD' },
+                        { name: 'Trench Maintenance', w: '50', bmpAch: '—' }
+                    ],
+                    nonBmpNutrientTable: [
+                        { name: 'Urea', w: '10', bmpAch: '0%' },
+                        { name: 'Dolomite', w: '10', bmpAch: '—' },
+                        { name: 'Borate', w: '15', bmpAch: '49%' },
+                        { name: 'CuSO4', w: '15', bmpAch: '—' },
+                        { name: 'NPK', w: '30', bmpAch: '—' },
+                        { name: 'EFB', w: '20', bmpAch: '—' }
+                    ],
+                    nonBmpCropTable: [
+                        { name: 'Harvesting Round', w: '30', bmpAch: '108%' },
+                        { name: 'Man Power Planing', w: '30', bmpAch: '90%' },
+                        { name: 'A&CI Assessment A&CI', w: '40', bmpAch: '—' }
+                    ],
+                    nonBmpIpdmTable: [
+                        { name: 'Planting Beneficial Plant', w: '20', bmpAch: '0% MTD' },
+                        { name: 'Leaf Pest Census', w: '20', bmpAch: '—' },
+                        { name: 'Oryctes Pest Census', w: '15', bmpAch: '—' },
+                        { name: 'Rodent Pest Census', w: '15', bmpAch: '—' },
+                        { name: 'Pest & Disease Control', w: '15', bmpAch: '—' },
+                        { name: 'Gupon (1:25)', w: '15', bmpAch: '—' }
+                    ],
+                    topRiskEstates: [
+                        { estate: 'Bukit Raya', score: 58.4, risk: 'Fertilizer Shortage' },
+                        { estate: 'Tanjung Sari', score: 65.3, risk: '' },
+                        { estate: 'Bukit Makmur', score: 67.7, risk: '' },
+                        { estate: 'Ulin Agro', score: 69.2, risk: '' },
+                        { estate: 'Hikmah Lima', score: 69.7, risk: '' },
+                        { estate: 'Kruing Agro', score: 71.2, risk: '' },
+                        { estate: 'Waringin', score: 71.5, risk: '' },
+                        { estate: 'Jaya Permai', score: 72.6, risk: '' },
+                        { estate: 'Meranti Agro', score: 72.9, risk: '' },
+                        { estate: 'Hikmah Empat', score: 74.0, risk: '' }
+                    ],
+                    topDelayedActivities: [
+                        { activity: 'Fertilizer', delay: '56 Days' },
+                        { activity: '—', delay: '—' },
+                        { activity: '—', delay: '—' },
+                        { activity: '—', delay: '—' },
+                        { activity: '—', delay: '—' },
+                        { activity: '—', delay: '—' },
+                        { activity: '—', delay: '—' },
+                        { activity: '—', delay: '—' },
+                        { activity: '—', delay: '—' },
+                        { activity: '—', delay: '—' }
+                    ],
+                    majorImprovements: [
+                        { category: 'Workforce', gap: '—' },
+                        { category: 'Fertilizer', gap: '-10%' },
+                        { category: 'Harvesting Round', gap: '—' },
+                        { category: 'Upkeep', gap: '—' },
+                        { category: 'Soil & Water Conservation', gap: '—' },
+                        { category: 'Pest & Disease', gap: '—' },
+                        { category: 'Yield (FFB)', gap: '—' }
+                    ]
+                }
+            },
+            methods: {
+                selectEstate(estate) {
+                    this.selectedEstate = estate;
+                },
+                getEstateCardClass(status) {
+                    if (status === 'high') return 'bg-[#006D65] text-white';
+                    if (status === 'mid') return 'bg-[#F59E0B] text-white';
+                    return 'bg-[#EF4444] text-white';
+                },
+                initCharts() {
+                    const yieldCtx = document.getElementById('yieldChart');
+                    if (yieldCtx) {
+                        new Chart(yieldCtx, {
+                            type: 'bar',
+                            data: {
+                                labels: ['SUM Jun', 'SUM Jul', 'SUM Aug', 'KAL Jun', 'KAL Jul', 'KAL Aug'],
+                                datasets: [
+                                    { label: 'Budget', data: [11.80, 15.09, 17.15, 10.87, 13.19, 15.27], backgroundColor: '#CBD5E1', barPercentage: 0.6, categoryPercentage: 0.6 },
+                                    { label: 'Actual', data: [11.90, 15.20, 17.20, 10.90, 13.25, 15.30], backgroundColor: '#006D65', barPercentage: 0.6, categoryPercentage: 0.6 }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                scales: {
+                                    y: { ticks: { font: { size: 8 } }, grid: { color: '#F1F5F9' } },
+                                    x: { ticks: { font: { size: 8 } }, grid: { display: false } }
+                                }
+                            }
+                        });
+                    }
+
+                    const scoreCtx = document.getElementById('scoreChart');
+                    if (scoreCtx) {
+                        new Chart(scoreCtx, {
+                            type: 'bar',
+                            data: {
+                                labels: ['SUM-1', 'SUM-2', 'SUM-3', 'SUM-4', 'KAL-1', 'KAL-2', 'KAL-3'],
+                                datasets: [
+                                    { label: 'Jun', data: [80, 70, 75, 72, 78, 70, 68], backgroundColor: '#D1FAE5', barPercentage: 0.7, categoryPercentage: 0.7 },
+                                    { label: 'Jul', data: [83, 72, 73, 71, 79, 72, 70], backgroundColor: '#00D0BC', barPercentage: 0.7, categoryPercentage: 0.7 },
+                                    { label: 'Aug', data: [88, 75, 74, 73, 81, 72, 70], backgroundColor: '#006D65', barPercentage: 0.7, categoryPercentage: 0.7 }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                scales: {
+                                    y: { min: 50, max: 100, ticks: { font: { size: 8 } }, grid: { color: '#F1F5F9' } },
+                                    x: { ticks: { font: { size: 8 } }, grid: { display: false } }
+                                }
+                            }
+                        });
+                    }
+
+                    const immatureScoreCtx = document.getElementById('immatureScoreChart');
+                    if (immatureScoreCtx) {
+                        new Chart(immatureScoreCtx, {
+                            type: 'bar',
+                            data: {
+                                labels: ['Gading Jaya', 'Hikmah Satu', 'Hikmah Dua', 'Sumber Sawit', 'IPBS', 'Sungai Sagu', 'Belida', 'Waringin'],
+                                datasets: [
+                                    { label: 'Jun', data: [55, 55, 48, 52, 50, 52, 45, 45], backgroundColor: '#D1FAE5', barPercentage: 0.6, categoryPercentage: 0.6 },
+                                    { label: 'Jul', data: [87.4, 96.7, 77.2, 80.1, 81.0, 78.7, 87.5, 76.4], backgroundColor: '#00D0BC', barPercentage: 0.6, categoryPercentage: 0.6 },
+                                    { label: 'Aug', data: [99.3, 95.2, 86.0, 84.6, 81.8, 80.2, 78.8, 75.6], backgroundColor: '#006D65', barPercentage: 0.6, categoryPercentage: 0.6 }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                scales: {
+                                    y: { min: 40, max: 100, ticks: { font: { size: 8 } }, grid: { color: '#F1F5F9' } },
+                                    x: { ticks: { font: { size: 8 }, maxRotation: 45, minRotation: 45 }, grid: { display: false } }
+                                }
+                            }
+                        });
+                    }
+                }
+            },
+
+            watch: {
+                currentPage() {
+                    this.$nextTick(() => {
+                        this.initCharts();
+                    });
+                }
+            },
+            mounted() {
+                this.initCharts();
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>

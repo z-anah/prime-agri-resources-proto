@@ -935,13 +935,48 @@
                     const ctx = document.getElementById(canvasId);
                     if (!ctx) return;
                     if (this.chartInstances[canvasId]) this.chartInstances[canvasId].destroy();
+                    const total = data.reduce((a, b) => a + b, 0);
                     this.chartInstances[canvasId] = new Chart(ctx, {
-                        type: 'doughnut',
+                        type: 'pie',
                         data: {
                             labels: labels,
                             datasets: [{ data: data, backgroundColor: colors, borderWidth: 0 }]
                         },
-                        options: { cutout: '65%', plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 6, font: { size: 8 } } } }, responsive: true, maintainAspectRatio: false }
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                legend: { display: true, position: 'bottom', labels: { boxWidth: 6, font: { size: 8 } } }
+                            } 
+                        },
+                        plugins: [{
+                            id: 'insideValueAndPercentPlugin',
+                            afterDraw: (chart) => {
+                                const { ctx } = chart;
+                                ctx.save();
+                                chart.data.datasets.forEach((dataset, i) => {
+                                    chart.getDatasetMeta(i).data.forEach((datapoint, index) => {
+                                        const angle = datapoint.startAngle + (datapoint.endAngle - datapoint.startAngle) / 2;
+                                        const radius = datapoint.outerRadius * 0.7;
+                                        const x = datapoint.x + Math.cos(angle) * radius;
+                                        const y = datapoint.y + Math.sin(angle) * radius;
+                                        const value = dataset.data[index];
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+                                        
+                                        const textVal = String(value);
+                                        const percentVal = `${percentage}`;
+                                        ctx.font = '8px Roboto, sans-serif';
+                                        ctx.fillStyle = '#FFFFFF';
+                                        ctx.textAlign = 'center';
+                                        ctx.textBaseline = 'middle';
+                                        ctx.fillText(textVal, x, y - 4);
+                                        ctx.font = '7px Roboto, sans-serif';
+                                        ctx.fillText(percentVal, x, y + 4);
+                                    });
+                                });
+                                ctx.restore();
+                            }
+                        }]
                     });
                 },
                 initBarComp(canvasId, labels, budgetData, actualData) {
