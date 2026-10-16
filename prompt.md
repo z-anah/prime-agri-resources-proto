@@ -49,46 +49,6 @@ Make the chart downloadable transparent png.
 
 ---
 
-Refine the existing dashboard without rebuilding it from scratch.
-
-### 1. Fixed Canvas
-- Set the dashboard design to a fixed desktop viewport of **1366 × 768 px**.
-- Make it strictly non-responsive. Do not add mobile, tablet, or responsive breakpoints.
-- Keep the layout optimized exclusively for 1366 × 768 px.
-- Prevent unintended horizontal or vertical scrolling. The entire dashboard should fit within the viewport.
-
-### 2. Eliminate Empty Space
-- Analyze the current dashboard and identify unused space, awkward gaps, and components that appear too small.
-- Resize and reposition existing components to fill the available space effectively.
-- Expand charts, graphs, KPI cards, tables, and detail panels to use their available width and height.
-- Ensure each component has an appropriate size relative to its importance and the amount of information it contains.
-- Use a balanced grid layout with consistent spacing, alignment, and margins.
-- Avoid oversized padding, unnecessary gaps, excessively small charts, and empty areas.
-- If a section has limited content, adjust its layout or expand its visualizations rather than leaving large blank spaces.
-
-### 3. Dashboard Layout
-- Keep the existing header, sidebar, filters, KPI cards, charts, tables, and detail sections.
-- Optimize the layout hierarchy so the most important information is immediately visible.
-- Make charts large enough to display labels, legends, axes, and data clearly.
-- Make sure titles, filter controls, and supporting information remain readable.
-- Use the available viewport efficiently without making the dashboard feel crowded.
-
-### 4. Technical Requirements
-- Preserve the existing data, chart logic, interactions, and functionality.
-- Use fixed pixel dimensions where appropriate to maintain the 1366 × 768 layout.
-- Keep the code clean and maintainable.
-
-### 5. Validation
-- Treat 1366 × 768 px as the exact target viewport.
-- Review the entire dashboard at that size and adjust component dimensions until the layout feels complete and balanced.
-- Ensure no component overlaps, clips important content, or leaves avoidable empty space.
-- Do not merely change the page width and height. Actually optimize the dimensions and positioning of the components inside the dashboard.
-
-**Expected result:** A polished, desktop-only dashboard that fills a 1366 × 768 px viewport, uses space efficiently, and presents its visualizations clearly without unnecessary blank areas.
-
-
----
-
 LOCATION TO UPDATE: mill>comparison
 
 only give me code to change, not all code
