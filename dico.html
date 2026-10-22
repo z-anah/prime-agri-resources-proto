@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dictionnaire Français pour Enfants</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-black min-h-screen">
+  <div id="app" class="flex h-screen">
+    <!-- Loading State -->
+    <div v-if="loading" class="m-auto text-slate-500 font-medium">Chargement du dictionnaire...</div>
+
+    <!-- Main App -->
+    <template v-else>
+      <aside class="w-1/3 border-r border-slate-200 flex flex-col">
+        <div class="p-4 border-b border-slate-200 font-bold">Dictionnaire</div>
+        <div class="p-4 border-b border-slate-200 space-y-2">
+          <input type="text" v-model="searchQuery" placeholder="Filter words..." class="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:border-black">
+          <select v-model="selectedCategory" class="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:border-black">
+            <option value="All">All Categories</option>
+            <option v-for="category in categories" :key="category" :value="category">
+              {{ category }}
+            </option>
+          </select>
+        </div>
+        <ul class="overflow-y-auto flex-1">
+          <li v-for="word in filteredWords" :key="word.key">
+            <button @click="selectedWord = word.key" :class="['w-full text-left p-4 hover:bg-slate-100 transition flex justify-between items-center', selectedWord === word.key ? 'bg-slate-100 font-semibold' : '']">
+              <span>{{ word.key }}</span>
+              <span class="text-xs text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full">{{ word.category }}</span>
+            </button>
+          </li>
+        </ul>
+      </aside>
+      <main class="w-2/3 p-8">
+        <div v-if="selectedWord && dictionary[selectedWord]">
+          <div class="inline-block text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-100 px-2.5 py-1 rounded mb-3">
+            {{ dictionary[selectedWord].category }}
+          </div>
+          <h1 class="text-3xl font-bold mb-4">{{ selectedWord }}</h1>
+          <p class="text-slate-600 text-lg leading-relaxed">{{ dictionary[selectedWord].definition }}</p>
+        </div>
+      </main>
+    </template>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue
+
+    function parseCSV(csvText) {
+      const lines = csvText.trim().split('\n')
+      const result = {}
+      
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim()
+        if (!line) continue
+
+        const row = []
+        let inQuotes = false
+        let currentField = ''
+        
+        for (let charIndex = 0; charIndex < line.length; charIndex++) {
+          const char = line[charIndex]
+          if (char === '"') {
+            inQuotes = !inQuotes
+          } else if (char === ',' && !inQuotes) {
+            row.push(currentField.trim())
+            currentField = ''
+          } else {
+            currentField += char
+          }
+        }
+        row.push(currentField.trim())
+
+        if (row.length >= 3) {
+          const word = row[0].replace(/^"|"$/g, '')
+          const category = row[1].replace(/^"|"$/g, '')
+          const definition = row[2].replace(/^"|"$/g, '')
+          
+          result[word] = { category, definition }
+        }
+      }
+      return result
+    }
+
+    createApp({
+      setup() {
+        const dictionary = ref({})
+        const selectedWord = ref('')
+        const searchQuery = ref('')
+        const selectedCategory = ref('All')
+        const loading = ref(true)
+
+        onMounted(async () => {
+          try {
+            const response = await fetch('dictionary.csv')
+            const csvText = await response.text()
+            dictionary.value = parseCSV(csvText)
+            selectedWord.value = Object.keys(dictionary.value)[0] || ''
+          } catch (error) {
+            console.error('Error loading dictionary.csv:', error)
+          } finally {
+            loading.value = false
+          }
+        })
+
+        const categories = computed(() => {
+          const cats = new Set()
+          Object.values(dictionary.value).forEach(item => cats.add(item.category))
+          return Array.from(cats)
+        })
+
+        const filteredWords = computed(() => {
+          return Object.keys(dictionary.value)
+            .map(key => ({ key, ...dictionary.value[key] }))
+            .filter(item => {
+              const matchesSearch = item.key.toLowerCase().includes(searchQuery.value.toLowerCase())
+              const matchesCategory = selectedCategory.value === 'All' || item.category === selectedCategory.value
+              return matchesSearch && matchesCategory
+            })
+        })
+
+        return { dictionary, selectedWord, searchQuery, selectedCategory, categories, filteredWords, loading }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>

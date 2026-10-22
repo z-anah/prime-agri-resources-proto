@@ -120,41 +120,45 @@
                         </select>
                     </div>
                     <div>
+                        <input type="text" v-model="filters.searchEstate" placeholder="Estate..."
+                            class="w-full border border-white rounded p-1 bg-[#00463E] font-medium text-white placeholder-white/60 outline-none">
+                    </div>
+                    <div v-if="currentPage === 'bmp-block' || currentPage === 'non-bmp' || currentPage ==='gap-analysis'">
                         <label class="block text-white uppercase text-[9px] font-bold mb-1">DIVISION</label>
                         <select v-model="filters.division"
                             class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
                             <option>All</option>
                         </select>
                     </div>
-                    <div>
+                    <div v-if="currentPage === 'bmp-block' || currentPage === 'non-bmp' || currentPage ==='gap-analysis'">
                         <label class="block text-white uppercase text-[9px] font-bold mb-1">BLOCK</label>
                         <select v-model="filters.block"
                             class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
                             <option>All</option>
                         </select>
                     </div>
-                    <div>
+                    <div v-if="currentPage === 'bmp-block' || currentPage === 'non-bmp' || currentPage ==='gap-analysis'">
                         <label class="block text-white uppercase text-[9px] font-bold mb-1">BLOCK TYPE</label>
                         <select v-model="filters.blockType"
                             class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
                             <option>BMP</option>
                         </select>
                     </div>
-                    <div>
+                    <div v-if="currentPage === 'bmp-block' || currentPage === 'non-bmp' || currentPage ==='gap-analysis'">
                         <label class="block text-white uppercase text-[9px] font-bold mb-1">BMP TYPE</label>
                         <select v-model="filters.bmpType"
                             class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
                             <option>Mature</option>
                         </select>
                     </div>
-                    <div>
+                    <div v-if="currentPage === 'bmp-block' || currentPage === 'non-bmp' || currentPage ==='gap-analysis'">
                         <label class="block text-white uppercase text-[9px] font-bold mb-1">PERIOD</label>
                         <select v-model="filters.period"
                             class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
                             <option>MTD</option>
                         </select>
                     </div>
-                    <div>
+                    <div v-if="currentPage === 'bmp-block' || currentPage === 'non-bmp' || currentPage ==='gap-analysis'">
                         <label class="block text-white uppercase text-[9px] font-bold mb-1">MONTH</label>
                         <select v-model="filters.month"
                             class="w-full border border-white rounded p-1 pr-4 bg-[#00463E] font-medium text-white outline-none">
@@ -2427,7 +2431,7 @@
         createApp({
             data() {
                 return {
-                    currentPage: 'immature',
+                    currentPage: 'mature',
                     pages: [
                         { id: 'mature', name: 'OVERVIEW BMP MATURE' },
                         { id: 'immature', name: 'OVERVIEW BMP IMMATURE' },

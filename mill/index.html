@@ -48,7 +48,6 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            user-select: none;
         }
 
         .app-viewport {
@@ -96,7 +95,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="block font-bold mb-1 text-gray-600">Navigation Style</label>
-                    <div class="grid grid-cols-2 gap-1.5">
+                    <div class="grid grid-cols-2 gap-2.5">
                         <button @click="pers.navStyle = 'top-full'"
                             :class="pers.navStyle==='top-full'?'bg-[#006D65] text-white':'bg-gray-100 text-gray-700'"
                             class="p-1.5 rounded text-left text-[11px] font-medium border">Top Full Width</button>
@@ -107,7 +106,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="block font-bold mb-1 text-gray-600">Filters Position</label>
-                    <div class="grid grid-cols-2 gap-1.5">
+                    <div class="grid grid-cols-2 gap-2.5">
                         <button @click="pers.filterPos = 'left-sidebar'"
                             :class="pers.filterPos==='left-sidebar'?'bg-[#006D65] text-white':'bg-gray-100 text-gray-700'"
                             class="p-1.5 rounded text-left text-[11px] font-medium border">Left Sidebar</button>
@@ -118,7 +117,7 @@
                 </div>
                 <div>
                     <label class="block font-bold mb-1 text-gray-600">Title Layout</label>
-                    <div class="grid grid-cols-2 gap-1.5">
+                    <div class="grid grid-cols-2 gap-2.5">
                         <button @click="pers.titleLayout = 'standard'"
                             :class="pers.titleLayout==='standard'?'bg-[#006D65] text-white':'bg-gray-100 text-gray-700'"
                             class="p-1.5 rounded text-left text-[11px] font-medium border">Standard</button>
@@ -181,8 +180,8 @@
             </div>
         </div>
 
-        <div class="flex-1 min-h-0 flex p-3 gap-3 overflow-visible">
-            <aside v-if="pers.filterPos === 'left-sidebar'" class="w-60 flex-shrink-0 flex flex-col gap-3 text-xs">
+        <div class="flex-1 min-h-0 flex p-3 gap-2 overflow-visible">
+            <aside v-if="pers.filterPos === 'left-sidebar'" class="w-60 flex-shrink-0 flex flex-col gap-2 text-xs">
                 <div class="bg-white rounded-lg p-3 border border-[#E2E8F0] shadow-sm">
                     <h2 class="font-bold text-gray-500 uppercase text-[10px] mb-2">DASHBOARD SELECTION</h2>
                     <div class="mb-2">
@@ -250,20 +249,20 @@
 
                 <!-- PAGE 1: PRODUCTION -->
                 <div v-if="currentPage === 'PRODUCTION'" class="flex-1 min-h-0 flex flex-col gap-2.5 overflow-visible">
-                    <div class="grid grid-cols-4 gap-3">
+                    <div class="grid grid-cols-4 gap-2">
                         <div
                             class="bg-white p-2.5 rounded-lg border border-[#E2E8F0] shadow-sm flex flex-col justify-between">
-                            <div class="flex justify-between font-bold text-gray-600 pb-0.5"><span
-                                    class="text-[10px] font-bold text-gray-600 uppercase">FFB
-                                    RECEIVED</span><span class="text-[10px] font-bold text-gray-600 uppercase">461
-                                    t</span></div>
+                            <div class="flex justify-between font-bold text-gray-600 pb-0.5">
+                                <span class="text-[10px] font-bold text-gray-600 uppercase">FFB RECEIVED</span>
+                                <span class="text-[10px] font-bold text-gray-600 uppercase">461 t</span>
+                            </div>
                             <div class="flex items-center">
                                 <div class="w-20 h-20 relative flex-shrink-0"><canvas id="ffbReceivedChart"></canvas>
                                 </div>
                                 <div class="ml-2 text-[9px] space-y-1 flex-1">
                                     <div v-for="item in dashboardData.ffbReceived.items" :key="item.label"
                                         class="flex items-center justify-between">
-                                        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full"
+                                        <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full"
                                                 :style="{backgroundColor: item.color}"></span><span
                                                 class="text-gray-600">{{ item.label }}</span></span>
                                         <span class="font-bold text-[#000000]">{{ item.value }} t</span>
@@ -328,7 +327,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 flex-shrink-0">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2 flex-shrink-0">
                         <div v-for="item in metrics" :key="item.id"
                             class="p-[1.5px] rounded-2xl bg-gradient-to-b from-prime-mint via-card-border to-prime-green shadow-sm">
                             <div class="bg-white p-2 rounded-[14px] h-full flex flex-col justify-between">
@@ -352,7 +351,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 grid-rows-2 gap-3 flex-1 min-h-0 overflow-visible">
+                    <div class="grid grid-cols-2 grid-rows-2 gap-2 flex-1 min-h-0 overflow-visible">
                         <div
                             class="bg-white p-2.5 rounded-lg border border-[#E2E8F0] shadow-sm flex flex-col min-h-0 overflow-visible h-full">
                             <div class="flex justify-between items-center mb-1 flex-shrink-0">
@@ -395,7 +394,7 @@
 
                 <!-- PAGE 2: QUALITY -->
                 <div v-if="currentPage === 'QUALITY'" class="flex-1 min-h-0 flex flex-col gap-2.5 overflow-visible">
-                    <div class="grid grid-cols-12 gap-3">
+                    <div class="grid grid-cols-12 gap-2">
                         <div
                             class="col-span-2 bg-[#006D65] text-white p-2 rounded-lg border border-[#E2E8F0] shadow-sm flex flex-col justify-center items-center text-center">
                             <h3 class="text-[10px] font-extrabold uppercase tracking-wider mb-0.5">LOOSE FRUIT</h3>
@@ -409,10 +408,12 @@
                                 <span class="text-xs font-black text-[#000000]">1,37%</span>
                             </div>
                             <div class="space-y-0.5 text-[9px] flex-1 flex flex-col justify-around">
-                                <div v-for="item in dashboardData.oilLosses" :key="item.label" class="flex items-center justify-between gap-2 font-medium">
+                                <div v-for="item in dashboardData.oilLosses" :key="item.label"
+                                    class="flex items-center justify-between gap-2 font-medium">
                                     <div class="w-32 truncate text-gray-600">{{ item.label }}</div>
                                     <div class="flex-1 bg-gray-100 rounded-full h-1 mt-0.5">
-                                        <div class="bg-brand-700 h-1 rounded-full" :style="{ width: item.width + '%' }"></div>
+                                        <div class="bg-brand-700 h-1 rounded-full" :style="{ width: item.width + '%' }">
+                                        </div>
                                     </div>
                                     <div class="w-10 text-right font-bold">{{ item.value }}</div>
                                 </div>
@@ -426,10 +427,12 @@
                                 <span class="text-xs font-black text-[#000000]">0,31%</span>
                             </div>
                             <div class="space-y-1 text-[9px] flex-1 flex flex-col justify-around">
-                                <div v-for="item in dashboardData.kernelLosses" :key="item.label" class="flex items-center justify-between gap-2 font-medium">
+                                <div v-for="item in dashboardData.kernelLosses" :key="item.label"
+                                    class="flex items-center justify-between gap-2 font-medium">
                                     <div class="w-32 truncate text-gray-600">{{ item.label }}</div>
                                     <div class="flex-1 bg-gray-100 rounded-full h-1 mt-0.5">
-                                        <div class="bg-brand-700 h-1 rounded-full" :style="{ width: item.width + '%' }"></div>
+                                        <div class="bg-brand-700 h-1 rounded-full" :style="{ width: item.width + '%' }">
+                                        </div>
                                     </div>
                                     <div class="w-10 text-right font-bold">{{ item.value }}</div>
                                 </div>
@@ -437,8 +440,8 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-12 gap-3 flex-1 min-h-0">
-                        <div class="col-span-2 flex flex-col gap-3">
+                    <div class="grid grid-cols-12 gap-2 flex-1 min-h-0">
+                        <div class="col-span-2 flex flex-col gap-2">
                             <div v-for="product in dashboardData.palmProductQuality" :key="product.name"
                                 class="bg-white p-3 rounded-lg border border-[#E2E8F0] shadow-sm flex-1 flex flex-col">
                                 <h3 class="text-[10px] font-extrabold text-gray-700 uppercase mb-2">{{ product.name }}
@@ -462,7 +465,7 @@
                             </div>
                         </div>
 
-                        <div class="col-span-5 flex flex-col gap-3">
+                        <div class="col-span-5 flex flex-col gap-2">
                             <div
                                 class="bg-white p-2.5 rounded-lg border border-[#E2E8F0] shadow-sm flex-1 min-h-0 flex flex-col">
                                 <div class="flex justify-between items-center mb-1 flex-shrink-0">
@@ -472,7 +475,7 @@
                             </div>
                         </div>
 
-                        <div class="col-span-5 flex flex-col gap-3">
+                        <div class="col-span-5 flex flex-col gap-2">
                             <div
                                 class="bg-white p-2.5 rounded-lg border border-[#E2E8F0] shadow-sm flex-1 min-h-0 flex flex-col">
                                 <div class="flex justify-between items-center mb-1 flex-shrink-0">
@@ -483,19 +486,18 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-4 gap-3">
-                        <div v-for="category in dashboardData.ffbQualityCategories"
-                            :key="category.title" class="bg-white p-2.5 rounded-lg border border-[#E2E8F0] shadow-sm">
-                            <h4
-                                class="text-[10px] font-extrabold text-gray-700 uppercase mb-1 pb-0.5">
+                    <div class="grid grid-cols-4 gap-2">
+                        <div v-for="category in dashboardData.ffbQualityCategories" :key="category.title"
+                            class="bg-white p-2.5 rounded-lg border border-[#E2E8F0] shadow-sm">
+                            <h4 class="text-[10px] font-extrabold text-gray-700 uppercase mb-1 pb-0.5">
                                 {{ category.title }}</h4>
                             <div class="space-y-1 text-[8px]">
-                                <div v-for="metric in category.metrics"
-                                    :key="metric.label">
+                                <div v-for="metric in category.metrics" :key="metric.label">
                                     <div class="flex justify-between font-medium items-center">
                                         <div class="w-[50px]">{{ metric.label }}</div>
                                         <div class="w-[150px] bg-gray-100 rounded-full h-1 mt-0.5">
-                                            <div class="bg-brand-700 h-1 rounded-full" :style="{ width: metric.width + '%' }"></div>
+                                            <div class="bg-brand-700 h-1 rounded-full"
+                                                :style="{ width: metric.width + '%' }"></div>
                                         </div>
                                         <div class="w-[20px] font-bold">{{ metric.value }}</div>
                                     </div>
@@ -506,9 +508,9 @@
                 </div>
 
                 <!-- PAGE 3: STOCK -->
-                <div v-if="currentPage === 'STOCK'" class="flex-1 min-h-0 flex flex-col gap-3 overflow-y-auto">
+                <div v-if="currentPage === 'STOCK'" class="flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto">
                     <!-- Top Row: Palm Kernel, Palm Shell, Empty Fruit Bunch in same line, each in card filling height -->
-                    <div class="grid grid-cols-3 gap-3 flex-shrink-0">
+                    <div class="grid grid-cols-3 gap-2 flex-shrink-0">
                         <!-- Palm Kernel Stock Card -->
                         <div
                             class="bg-white p-3 rounded-lg border border-[#E2E8F0] shadow-sm flex flex-col justify-between h-full">
@@ -561,7 +563,7 @@
                                 <div
                                     class="bg-white p-2 rounded-xl flex flex-col items-center justify-between shadow-sm border border-[#E2E8F0] relative h-full">
                                     <div
-                                        class="flex flex-row items-center justify-center bg-[#00D0BC]/20 border border-[#00D0BC]/30 px-2 py-0.5 rounded-full shadow-sm gap-1 mb-1 flex-shrink-0">
+                                        class="flex flex-row items-center justify-center bg-[#00D0BC]/20 border border-[#00D0BC]/30 px-2 py-0.5 rounded-full shadow-sm gap-2 mb-1 flex-shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-[#006D65] animate-pulse"></span>
                                         <span
                                             class="text-[9px] font-extrabold tracking-wider text-[#00463E] uppercase">TANK
@@ -576,7 +578,7 @@
                                 <div
                                     class="bg-white p-2 rounded-xl flex flex-col items-center justify-between shadow-sm border border-[#E2E8F0] relative h-full">
                                     <div
-                                        class="flex flex-row items-center justify-center bg-[#00D0BC]/20 border border-[#00D0BC]/30 px-2 py-0.5 rounded-full shadow-sm gap-1 mb-1 flex-shrink-0">
+                                        class="flex flex-row items-center justify-center bg-[#00D0BC]/20 border border-[#00D0BC]/30 px-2 py-0.5 rounded-full shadow-sm gap-2 mb-1 flex-shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-[#006D65]"></span>
                                         <span
                                             class="text-[9px] font-extrabold tracking-wider text-[#00463E] uppercase">TANK
@@ -591,7 +593,7 @@
                                 <div
                                     class="bg-white p-2 rounded-xl flex flex-col items-center justify-between shadow-sm border border-[#E2E8F0] relative h-full">
                                     <div
-                                        class="flex flex-row items-center justify-center bg-[#00D0BC]/20 border border-[#00D0BC]/30 px-2 py-0.5 rounded-full shadow-sm gap-1 mb-1 flex-shrink-0">
+                                        class="flex flex-row items-center justify-center bg-[#00D0BC]/20 border border-[#00D0BC]/30 px-2 py-0.5 rounded-full shadow-sm gap-2 mb-1 flex-shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-[#006D65]"></span>
                                         <span
                                             class="text-[9px] font-extrabold tracking-wider text-[#00463E] uppercase">TANK
@@ -609,7 +611,7 @@
                                 <div
                                     class="bg-white p-2 rounded-xl flex flex-col items-center justify-between shadow-sm border border-[#E2E8F0] relative h-full">
                                     <div
-                                        class="flex flex-row items-center justify-center bg-[#00D0BC]/20 border border-[#00D0BC]/30 px-2 py-0.5 rounded-full shadow-sm gap-1 mb-1 flex-shrink-0">
+                                        class="flex flex-row items-center justify-center bg-[#00D0BC]/20 border border-[#00D0BC]/30 px-2 py-0.5 rounded-full shadow-sm gap-2 mb-1 flex-shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-[#006D65] animate-pulse"></span>
                                         <span
                                             class="text-[9px] font-extrabold tracking-wider text-[#00463E] uppercase">TANK
@@ -624,7 +626,7 @@
                                 <div
                                     class="bg-white p-2 rounded-xl flex flex-col items-center justify-between shadow-sm border border-[#E2E8F0] relative h-full">
                                     <div
-                                        class="flex flex-row items-center justify-center bg-[#00D0BC]/20 border border-[#00D0BC]/30 px-2 py-0.5 rounded-full shadow-sm gap-1 mb-1 flex-shrink-0">
+                                        class="flex flex-row items-center justify-center bg-[#00D0BC]/20 border border-[#00D0BC]/30 px-2 py-0.5 rounded-full shadow-sm gap-2 mb-1 flex-shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-[#006D65] animate-pulse"></span>
                                         <span
                                             class="text-[9px] font-extrabold tracking-wider text-[#00463E] uppercase">TANK
@@ -641,14 +643,14 @@
                 </div>
 
                 <!-- PAGE 4: COMPARISON -->
-                <div v-if="currentPage === 'COMPARISON'" class="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
+                <div v-if="currentPage === 'COMPARISON'" class="flex-1 min-h-0 flex flex-col gap-2 overflow-hidden">
 
 
 
                     <!-- Subpage 1: Volumetric & Stock (Image 1) -->
                     <div v-if="comparisonSubPage === 'volumetric'"
-                        class="flex-1 min-h-0 grid grid-cols-12 gap-3 overflow-hidden">
-                        <div class="col-span-4 flex flex-col gap-3 h-full">
+                        class="flex-1 min-h-0 grid grid-cols-12 gap-2 overflow-hidden">
+                        <div class="col-span-4 flex flex-col gap-2 h-full">
                             <div
                                 class="bg-white p-3 rounded-lg border border-[#E2E8F0] shadow-sm flex-1 flex flex-col justify-between">
                                 <h3 class="text-[10px] font-extrabold text-gray-700 uppercase mb-1">FFB PROCESS (TON)
@@ -657,46 +659,46 @@
                             </div>
                             <div
                                 class="bg-white p-3 rounded-lg border border-[#E2E8F0] shadow-sm flex-1 flex flex-col justify-between">
-                                <h3 class="text-[10px] font-extrabold text-gray-700 uppercase mb-1">CPO PRODUCTION (TON)
+                                <h3 class="text-[10px] font-extrabold text-gray-700 uppercase mb-1">PALM SHELL STOCK (TON)
                                 </h3>
-                                <div class="chart-canvas-wrap"><canvas id="chartCompCPOProd"></canvas></div>
+                                <div class="chart-canvas-wrap"><canvas id="chartCompShellStock"></canvas></div>
                             </div>
                             <div
                                 class="bg-white p-3 rounded-lg border border-[#E2E8F0] shadow-sm flex-1 flex flex-col justify-between">
-                                <h3 class="text-[10px] font-extrabold text-gray-700 uppercase mb-1">PK PRODUCTION (TON)
+                                <h3 class="text-[10px] font-extrabold text-gray-700 uppercase mb-1">EFB STOCK (TON)
                                 </h3>
-                                <div class="chart-canvas-wrap"><canvas id="chartCompPKProd"></canvas></div>
+                                <div class="chart-canvas-wrap"><canvas id="chartCompEFBStock"></canvas></div>
                             </div>
                         </div>
-                        <div class="col-span-8 flex flex-col gap-3 h-full">
+                        <div class="col-span-8 flex flex-col gap-2 h-full">
                             <div
                                 class="bg-white p-3 rounded-lg border border-[#E2E8F0] shadow-sm h-full flex flex-col justify-between">
-                                <div class="grid grid-cols-2 gap-3 flex-1">
+                                <div class="grid grid-cols-2 gap-2 flex-1 ">
                                     <div class="flex flex-col">
-                                        <h3 class="text-[10px] mb-4 font-extrabold text-gray-700 uppercase text-center">
-                                            CPO
-                                            STOCK (TON)</h3>
-                                        <div class="chart-canvas-wrap"><canvas id="chartCompCPOStock"></canvas></div>
+                                        <h3 class="text-[10px] mb-4 font-extrabold text-gray-700 uppercase text-center"> CPO PRODUCTION (TON)</h3>
+                                        <div class="chart-canvas-wrap">
+                                            <canvas id="chartCompCPOProd"></canvas>
+                                        </div>
                                     </div>
                                     <div class="flex flex-col">
-                                        <h3 class="text-[10px] mb-4 font-extrabold text-gray-700 uppercase text-center">
-                                            PK
-                                            STOCK (TON)</h3>
-                                        <div class="chart-canvas-wrap"><canvas id="chartCompPKStock"></canvas></div>
+                                        <h3 class="text-[10px] mb-4 font-extrabold text-gray-700 uppercase text-center"> PK PRODUCTION (TON)</h3>
+                                        <div class="chart-canvas-wrap">
+                                            <canvas id="chartCompPKProd"></canvas>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-3 flex-1 border-t border-[#E2E8F0] pt-2 mt-2">
+                                <div class="grid grid-cols-2 gap-2 flex-1 border-t border-[#E2E8F0] pt-2 mt-2">
                                     <div class="flex flex-col">
-                                        <h3 class="text-[10px] mb-4 font-extrabold text-gray-700 uppercase text-center">
-                                            PALM
-                                            SHELL STOCK (TON)</h3>
-                                        <div class="chart-canvas-wrap"><canvas id="chartCompShellStock"></canvas></div>
+                                        <h3 class="text-[10px] mb-4 font-extrabold text-gray-700 uppercase text-center"> CPO STOCK (TON)</h3>
+                                        <div class="chart-canvas-wrap">
+                                            <canvas id="chartCompCPOStock"></canvas>
+                                        </div>
                                     </div>
                                     <div class="flex flex-col">
-                                        <h3 class="text-[10px] mb-4 font-extrabold text-gray-700 uppercase text-center">
-                                            EFB
-                                            STOCK (TON)</h3>
-                                        <div class="chart-canvas-wrap"><canvas id="chartCompEFBStock"></canvas></div>
+                                        <h3 class="text-[10px] mb-4 font-extrabold text-gray-700 uppercase text-center"> PK STOCK (TON)</h3>
+                                        <div class="chart-canvas-wrap">
+                                            <canvas id="chartCompPKStock"></canvas>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -705,8 +707,8 @@
 
                     <!-- Subpage 2: Efficiency & Losses (Image 2) -->
                     <div v-if="comparisonSubPage === 'performance'"
-                        class="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
-                        <div class="grid grid-cols-3 gap-3 flex-1 min-h-0">
+                        class="flex-1 min-h-0 flex flex-col gap-2 overflow-hidden">
+                        <div class="grid grid-cols-3 gap-2 flex-1 min-h-0">
                             <div class="bg-white p-3 rounded-lg border border-[#E2E8F0] shadow-sm flex flex-col h-full">
                                 <h3 class="text-[10px] font-extrabold text-gray-700 uppercase mb-1">OER (%)</h3>
                                 <div class="chart-canvas-wrap"><canvas id="chartCompOER"></canvas></div>
@@ -721,7 +723,7 @@
                                 <div class="chart-canvas-wrap"><canvas id="chartCompFFA"></canvas></div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-3 gap-3 flex-1 min-h-0">
+                        <div class="grid grid-cols-3 gap-2 flex-1 min-h-0">
                             <div class="bg-white p-3 rounded-lg border border-[#E2E8F0] shadow-sm flex flex-col h-full">
                                 <h3 class="text-[10px] font-extrabold text-gray-700 uppercase mb-1">Oil Losses (%)</h3>
                                 <div class="chart-canvas-wrap"><canvas id="chartCompOilLosses"></canvas></div>
@@ -769,7 +771,7 @@
                         { label: 'Dirt', value: '6.5%', max: 'Max 7%', width: 92 }
                     ]
                 },
-                
+
             ],
             oilLosses: [
                 { label: 'Empty Bunch', value: '0,45%', width: 45 },
@@ -843,12 +845,13 @@
                     chartInstances: {},
                     periodeInterval: 'Monthly',
                     metrics: [
-                        { id: 1, label: 'Throughput', badge: '45 tph', budget: '45 tph', icon: 'settings' },
-                        { id: 2, label: 'Mill Utilization', value: '25.7 %', icon: 'bar-chart-2' },
-                        { id: 3, label: 'Breakdown', badge: '0%', budget: '0,5%', icon: 'wrench' },
-                        { id: 4, label: 'Oil Losses', badge: '1,27 %', budget: '1,36 %', icon: 'droplet' },
-                        { id: 5, label: 'Kernel Losses', badge: '0,24 %', budget: '0,35 %', icon: 'search' },
-                        { id: 6, label: 'Curah Hujan', value: '10 mm / 1 Day', icon: 'zap' }
+                        { id: 1, label: 'Jam process', value: '8 h / 1 Day', icon: 'clock' },
+                        { id: 2, label: 'Throughput', badge: '45 tph', budget: '45 tph', icon: 'settings' },
+                        { id: 3, label: 'Mill Utilization', value: '25.7 %', icon: 'bar-chart-2' },
+                        { id: 4, label: 'Breakdown', badge: '0%', budget: '0,5%', icon: 'wrench' },
+                        { id: 5, label: 'Oil Losses', badge: '1,27 %', budget: '1,36 %', icon: 'droplet' },
+                        { id: 6, label: 'Kernel Losses', badge: '0,24 %', budget: '0,35 %', icon: 'search' },
+                        { id: 7, label: 'Curah Hujan', value: '10 mm / 1 Day', icon: 'zap' },
                     ],
                     tanks: [
                         { id: 'gaugeTank1', volume: 140, ffa: 3.49 },
@@ -896,16 +899,16 @@
                         const oilLossData = [1.18, 1.22, 1.25, 1.12, 1.14, null, 1.21, 1.12, 1.24, 1.22, 1.28, null, null, 1.19, 1.24, 1.21, 1.14, 1.13, 1.22, null, 1.15, 1.16, 1.15, 1.24, 1.12, 1.10];
                         const kernelLossData = [0.22, 0.20, 0.23, 0.25, 0.24, null, 0.20, 0.28, 0.32, 0.35, null, null, 0.21, 0.28, 0.30, 0.27, 0.24, 0.25, 0.25, null, 0.24, 0.24, 0.22, 0.20, 0.23, 0.21];
 
-                        this.initCustomChart('chartOER', labels, oerData, 20.22, 17.0, 24.0, 1.0, false);
-                        this.initCustomChart('chartKER', labels, kerData, 5.75, 5.0, 7.5, 0.5, false);
-                        this.initCustomChart('chartOilLosses', labels, oilLossData, 1.36, 1.00, 1.50, 0.05, true);
-                        this.initCustomChart('chartKernelLosses', labels, kernelLossData, 0.40, 0.10, 0.50, 0.05, true);
+                        this.initCustomChart('chartOER', labels, oerData, 20.22, 17.0, 24.0, 1.0);
+                        this.initCustomChart('chartKER', labels, kerData, 5.75, 5.0, 7.5, 0.5);
+                        this.initCustomChart('chartOilLosses', labels, oilLossData, 1.36, 1.00, 1.50, 0.05);
+                        this.initCustomChart('chartKernelLosses', labels, kernelLossData, 0.40, 0.10, 0.50, 0.05);
                     } else if (this.currentPage === 'QUALITY') {
                         const monthlyLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept'];
                         const looseFruitMonthly = [2.2, 5.1, 2.8, 1.9, 2.7, 0.8, 2.1, 3.0, 2.2];
                         const oerMonthly = [19.0, 19.6, 18.9, 18.6, 18.1, 19.0, 18.7, 18.4, 19.0];
-                        this.initCustomChart('chartQualityLooseFruit', monthlyLabels, looseFruitMonthly, 8.0, 0, 10, 2, true);
-                        this.initCustomChart('chartQualityOER', monthlyLabels, oerMonthly, 20.22, 18.0, 21.0, 0.75, false);
+                        this.initCustomChart('chartQualityLooseFruit', monthlyLabels, looseFruitMonthly, 8.0, 0, 10, 2);
+                        this.initCustomChart('chartQualityOER', monthlyLabels, oerMonthly, 20.22, 18.0, 21.0, 0.75);
                     } else if (this.currentPage === 'STOCK') {
                         this.tanks.forEach(tank => {
                             this.initGaugeChart(tank.id, tank.volume, tank.ffa);
@@ -942,12 +945,12 @@
                             labels: labels,
                             datasets: [{ data: data, backgroundColor: colors, borderWidth: 0 }]
                         },
-                        options: { 
-                            responsive: true, 
+                        options: {
+                            responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { 
+                            plugins: {
                                 legend: { display: true, position: 'bottom', labels: { boxWidth: 6, font: { size: 8 } } }
-                            } 
+                            }
                         },
                         plugins: [{
                             id: 'insideValueAndPercentPlugin',
@@ -962,7 +965,7 @@
                                         const y = datapoint.y + Math.sin(angle) * radius;
                                         const value = dataset.data[index];
                                         const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
-                                        
+
                                         const textVal = String(value);
                                         const percentVal = `${percentage}`;
                                         ctx.font = '8px Roboto, sans-serif';
@@ -1119,7 +1122,7 @@
                     };
                     chart.setOption(option);
                 },
-                initCustomChart(canvasId, labels, dataPoints, benchmarkVal, minY, maxY, stepSize, fillBg) {
+                initCustomChart(canvasId, labels, dataPoints, benchmarkVal, minY, maxY, stepSize) {
                     const ctx = document.getElementById(canvasId);
                     if (!ctx) return;
                     if (this.chartInstances[canvasId]) this.chartInstances[canvasId].destroy();
@@ -1128,8 +1131,27 @@
                         data: {
                             labels: labels,
                             datasets: [
-                                { label: 'Actual', data: dataPoints, borderColor: '#006D65', backgroundColor: fillBg ? '#006D65' : 'transparent', fill: fillBg, tension: 0.4, pointRadius: fillBg ? 0 : 2, pointBackgroundColor: '#006D65', borderWidth: 1.5 },
-                                { label: 'Target / Limit', data: Array(labels.length).fill(benchmarkVal), backgroundColor: fillBg ? 'rgba(245, 158, 11, 0.2)' : 'transparent', fill: fillBg, borderColor: '#F59E0B', borderDash: fillBg ? [] : [3, 3], borderWidth: fillBg ? 2 : 1.5, pointRadius: 0 }
+                                {
+                                    label: 'Actual',
+                                    data: dataPoints,
+                                    borderColor: '#006D65',
+                                    backgroundColor: 'transparent',
+                                    fill: false,
+                                    tension: 0.4,
+                                    pointRadius: 2,
+                                    pointBackgroundColor: '#006D65',
+                                    borderWidth: 1.5
+                                },
+                                {
+                                    label: 'Target / Limit',
+                                    data: Array(labels.length).fill(benchmarkVal),
+                                    backgroundColor: 'transparent',
+                                    fill: false,
+                                    borderColor: '#F59E0B',
+                                    borderDash: [3, 3],
+                                    borderWidth: 1.5,
+                                    pointRadius: 0
+                                }
                             ]
                         },
                         options: {
@@ -1161,7 +1183,7 @@
                             }]
                         },
                         options: {
-                            cutout: '70%',
+                            cutout: '60%',
                             plugins: {
                                 legend: { display: false },
                                 tooltip: {
@@ -1169,7 +1191,12 @@
                                         label: function (context) {
                                             const value = context.raw || 0;
                                             const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                            return ` ${context.label}: ${value} t (${percentage}%)`;
+
+                                            // Returning an array creates separate lines
+                                            return [
+                                                `${value} t`,
+                                                `${percentage} %`
+                                            ];
                                         }
                                     }
                                 }
