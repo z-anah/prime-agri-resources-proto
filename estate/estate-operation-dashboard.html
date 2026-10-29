@@ -1,0 +1,1144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Estate Operation Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --accent-900:#00463e;
+    --accent-700:#00564f;
+    --accent-600:#006d65;
+    --accent-500:#008e82;
+    --accent-400:#00b3a3;
+    --accent-300:#00d0bc;
+    --accent-200:#cfefea;
+    --surface-tint:#e3f5f2;
+    --surface-tint-strong:#c7ece6;
+    --neutral-50:#f6f7f7;
+    --neutral-0:#ffffff;
+    --ink-900:#16231f;
+    --ink-600:#3d4c48;
+    --ink-500:#5b6b67;
+    --line:#dce3e1;
+    --line-strong:#c3cdca;
+    --good:#2e9e5b;
+    --good-bg:#e4f4ea;
+    --warn:#b9791c;
+    --warn-bg:#faf1de;
+    --critical:#c3473b;
+    --critical-bg:#fbe9e7;
+    --page-bg:#eef1f0;
+    /* new tokens - tab nav (no equivalent in the 7-file statics) */
+    --tab-inactive-bg:#26302f;
+    --tab-active-bg:#c7ece6;
+    --tab-active-border:#006d65;
+    --tab-active-ink:#00463e;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;background:var(--page-bg);color:var(--ink-900);overflow:hidden;
+    font-family:"Roboto","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font:inherit;cursor:pointer;}
+  .mono{font-family:ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Liberation Mono",monospace;
+    font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:-0.01em;}
+
+  .fit{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+  .canvas{width:1600px;height:900px;flex:0 0 auto;transform-origin:center center;
+    overflow:hidden;background:var(--neutral-50);border:1px solid var(--line-strong);
+    padding:14px;display:flex;flex-direction:column;gap:9px;}
+
+  /* ---------- topbar ---------- */
+  .topbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;
+    padding:0 26px;height:62px;color:#fff;background:#00695c;border-radius:16px;}
+  .topbar-brand{display:flex;align-items:center;gap:14px;}
+  .topbar-logo{display:flex;align-items:center;flex:0 0 auto;background:#fff;border-radius:9px;
+    padding:7px 12px;}
+  .topbar-logo img{height:22px;width:auto;display:block;}
+  .topbar-brand h1{font-size:15px;margin:0;font-weight:700;letter-spacing:0.01em;color:#fff;}
+  .topbar-brand .eyebrow{font-size:9px;text-transform:uppercase;letter-spacing:0.09em;opacity:0.75;font-weight:600;margin-bottom:1px;display:block;color:var(--accent-200);}
+  .topbar-ctx{display:flex;align-items:center;gap:22px;}
+  .topbar-ctx .cx{text-align:right;}
+  .topbar-ctx .cx b{display:block;font-size:13px;font-weight:800;color:#fff;line-height:1.2;}
+  .topbar-ctx .cx span{display:block;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-200);opacity:.85;font-weight:700;margin-top:2px;}
+
+  /* tab nav - new tokens - separate row BELOW the topbar, not inside it */
+  .tabbar{flex:0 0 auto;display:flex;justify-content:flex-end;}
+  .tabnav{display:flex;align-items:center;gap:7px;}
+  .tabnav button{border:1.5px solid transparent;border-radius:7px;padding:8px 14px;font-size:10.5px;
+    font-weight:800;letter-spacing:.04em;text-transform:uppercase;background:var(--tab-inactive-bg);
+    color:#cfe3df;transition:background .15s,color .15s;}
+  .tabnav button:hover{color:#fff;}
+  .tabnav button.active{background:var(--tab-active-bg);border-color:var(--tab-active-border);color:var(--tab-active-ink);}
+
+  /* ---------- main grid ---------- */
+  .grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:230px 1fr;gap:9px;}
+  .rail{display:flex;flex-direction:column;gap:9px;min-height:0;height:100%;overflow-y:auto;}
+  .rail .panel{flex:0 0 auto;box-shadow:none;}
+  .col{display:flex;flex-direction:column;gap:9px;min-height:0;height:100%;overflow-y:auto;overflow-x:hidden;}
+  .rail::-webkit-scrollbar,.col::-webkit-scrollbar,.dd-menu::-webkit-scrollbar{width:6px;}
+  .rail::-webkit-scrollbar-thumb,.col::-webkit-scrollbar-thumb,.dd-menu::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:4px;}
+  .rail::-webkit-scrollbar-track,.col::-webkit-scrollbar-track,.dd-menu::-webkit-scrollbar-track{background:transparent;}
+
+  /* filter fields */
+  .field{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;}
+  .field label{font-size:8.5px;color:var(--ink-500);text-transform:uppercase;
+    letter-spacing:0.04em;font-weight:700;}
+  .btn{border:none;border-radius:6px;padding:5px 9px;font-size:10px;font-weight:700;
+    cursor:pointer;font-family:inherit;}
+  .btn-reset{background:transparent;border:1px solid var(--line-strong);color:var(--ink-500);
+    width:100%;margin-top:9px;}
+  .btn-reset:hover{border-color:var(--accent-500);color:var(--accent-600);}
+
+  /* dropdown-button (Tableau "Single Value Dropdown" look) — unified for Region/Area/Estate:
+     button face shows the field name itself (REGION/AREA/ESTATE), no separate caption label */
+  .dd{position:relative;}
+  .dd-btn{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;
+    background:var(--neutral-0);border:1px solid var(--line-strong);border-radius:6px;
+    padding:6px 8px;font-size:10px;font-weight:700;color:var(--ink-900);text-align:left;
+    text-transform:uppercase;letter-spacing:0.05em;}
+  .dd-btn .chev{flex:0 0 auto;width:7px;height:7px;border-right:2px solid var(--ink-500);
+    border-bottom:2px solid var(--ink-500);transform:rotate(45deg);transition:transform .15s;}
+  .dd-btn.open .chev{transform:rotate(225deg);}
+  .dd-menu{position:absolute;left:0;right:0;top:calc(100% + 3px);z-index:20;background:var(--neutral-0);
+    border:1px solid var(--line-strong);border-radius:6px;box-shadow:4px 6px 9px -3px rgba(15,23,42,0.22);
+    overflow-y:auto;max-height:180px;}
+  .dd-menu .dd-opt{padding:6px 9px;font-size:11px;font-weight:600;color:var(--ink-600);cursor:pointer;}
+  .dd-menu .dd-opt:hover{background:var(--surface-tint);color:var(--ink-900);}
+  .dd-menu .dd-opt.active{background:var(--surface-tint-strong);color:var(--ink-900);font-weight:700;}
+
+  /* measure switch, appended inline inside Estate Selection panel */
+  .mswitch-inline{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
+  .mswitch{display:flex;gap:4px;}
+  .mswitch button{flex:1;text-align:center;font-size:8.5px;font-weight:700;padding:5px 2px;
+    border-radius:999px;border:1px solid var(--line-strong);background:transparent;
+    color:var(--ink-500);font-family:inherit;cursor:pointer;}
+  .mswitch button.active{background:var(--accent-600);border-color:var(--accent-600);color:#fff;}
+
+  /* period pills */
+  .period-toggle{display:flex;gap:4px;margin-bottom:8px;}
+  .period-toggle button{flex:1;text-align:center;font-size:8.5px;font-weight:700;padding:4px 2px;
+    border-radius:999px;border:1px solid var(--line-strong);background:transparent;
+    color:var(--ink-500);font-family:inherit;cursor:pointer;}
+  .period-toggle button.active{background:var(--accent-600);border-color:var(--accent-600);color:#fff;}
+  .date-field{font-size:9px;font-weight:700;color:var(--ink-600);background:var(--surface-tint);
+    border:1px solid var(--surface-tint-strong);padding:4px 8px;border-radius:6px;}
+
+  /* legend */
+  .legend-item{display:flex;align-items:center;gap:7px;font-size:9.5px;color:var(--ink-600);padding:3px 0;}
+  .legend-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;}
+  .legend-dot.good{background:var(--good);}
+  .legend-dot.warn{background:var(--warn);}
+  .legend-dot.critical{background:var(--critical);}
+
+  /* page header */
+  .page-head{flex:0 0 auto;display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
+  .page-head h1{font-size:15px;margin:0;font-weight:700;color:var(--ink-900);}
+  .page-head .period-note{font-size:9.5px;font-weight:700;color:var(--ink-500);}
+
+  /* ---------- panels ---------- */
+  .panel{background:var(--neutral-0);border:1px solid var(--line);border-radius:9px;
+    display:flex;flex-direction:column;min-height:0;overflow:hidden;
+    box-shadow:4px 6px 9px -3px rgba(15,23,42,0.22);}
+  .panel-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:7px 11px 6px;border-bottom:1px solid var(--line);}
+  .panel-head h2{font-size:10px;margin:0;font-weight:700;text-transform:uppercase;
+    letter-spacing:0.05em;color:var(--ink-500);}
+  .panel-head .sub{font-size:9px;font-weight:700;color:var(--ink-500);}
+  .panel-body{flex:1 1 auto;min-height:0;padding:9px 11px;display:flex;flex-direction:column;gap:7px;}
+  .row{display:flex;gap:9px;min-height:0;}
+  .row>.panel{flex:1 1 0;min-width:0;}
+  .row>.cmp-grid{flex:1 1 0;min-width:0;}
+
+  /* KPI */
+  .kpi{display:flex;flex-direction:column;gap:4px;}
+  .kpi .k-label{font-size:9px;font-weight:700;color:var(--ink-500);
+    text-transform:uppercase;letter-spacing:0.05em;}
+  .kpi .k-value{font-size:24px;font-weight:700;color:var(--ink-900);line-height:1.1;}
+  .kpi .k-value .k-of{font-size:11px;font-weight:700;color:var(--ink-500);margin-left:5px;}
+  .kpi .k-sub{font-size:9px;color:var(--ink-500);font-weight:700;}
+  .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;
+    font-size:10px;font-weight:700;}
+  .badge.good{color:var(--good);background:var(--good-bg);}
+  .badge.warn{color:var(--warn);background:var(--warn-bg);}
+  .badge.critical{color:var(--critical);background:var(--critical-bg);}
+  .pbar{position:relative;height:7px;background:var(--line);border-radius:4px;overflow:hidden;}
+  .pbar .fill{position:absolute;top:0;left:0;height:100%;border-radius:4px;}
+  .fill.good{background:var(--good);}
+  .fill.warn{background:var(--warn);}
+  .fill.critical{background:var(--critical);}
+
+  /* metric rows */
+  .mrow{display:flex;flex-direction:column;gap:3px;}
+  .mrow .m-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+    font-size:9.5px;font-weight:700;color:var(--ink-600);}
+  .mrow .m-top .m-val{font-size:11px;color:var(--ink-900);}
+  .mrow .m-lim{font-size:8.5px;font-weight:700;color:var(--ink-500);}
+
+  /* chart host */
+  .chart{flex:1 1 auto;min-height:0;position:relative;}
+  .chart canvas{position:absolute;inset:0;width:100%!important;height:100%!important;}
+  .clegend{display:flex;align-items:center;gap:14px;}
+  .clegend .ci{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;
+    color:var(--ink-600);}
+  .clegend .cs{width:10px;height:10px;border-radius:2px;flex:0 0 auto;}
+  .cs.actual{background:var(--accent-600);}
+  .cs.budget{background:var(--accent-200);}
+
+  /* date controls */
+  .datebox{display:flex;align-items:center;gap:6px;background:var(--neutral-0);
+    border:1px solid var(--line-strong);border-radius:4px;padding:5px 8px;font-size:9.5px;
+    font-weight:700;color:var(--ink-900);}
+  .datebox .cal-icon{flex:0 0 auto;width:12px;height:12px;color:var(--ink-500);}
+  .daterange{display:flex;flex-direction:column;gap:7px;}
+  .daterange .dr-row{display:flex;align-items:center;gap:5px;}
+  .daterange .dr-row .datebox{flex:1 1 0;min-width:0;padding:5px 6px;font-size:9px;}
+  .daterange .dr-sep{font-size:9px;color:var(--ink-500);font-weight:700;flex:0 0 auto;}
+  .dr-slider{position:relative;height:3px;background:var(--line);border-radius:2px;margin:1px 4px 5px;}
+  .dr-slider .dr-fill{position:absolute;top:0;height:100%;background:var(--accent-600);border-radius:2px;}
+  .dr-slider .dr-handle{position:absolute;top:50%;width:9px;height:9px;border-radius:50%;
+    background:var(--neutral-0);border:2px solid var(--accent-600);transform:translate(-50%,-50%);}
+  .yearpick{position:relative;}
+  .yearpick select{width:100%;appearance:none;-webkit-appearance:none;background:var(--neutral-0);
+    border:1px solid var(--line-strong);border-radius:4px;padding:5px 22px 5px 8px;font-size:10px;
+    font-weight:700;color:var(--ink-900);font-family:inherit;cursor:pointer;}
+  .yearpick::after{content:"";position:absolute;right:8px;top:50%;width:5px;height:5px;
+    border-right:2px solid var(--ink-500);border-bottom:2px solid var(--ink-500);
+    transform:translateY(-70%) rotate(45deg);pointer-events:none;}
+
+  /* ===== page-specific ===== */
+  .kpi-row-single .panel-body{flex-direction:row;align-items:center;gap:22px;}
+  .kpi-row-single .kpi{flex:0 0 auto;min-width:150px;}
+  .kpi-row-single .pbar-wrap{flex:1 1 auto;display:flex;flex-direction:column;gap:5px;}
+  .kpi-row-single .pbar-top{display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:var(--ink-500);}
+
+  /* Daily FFB production panel */
+  .ffb-stats{display:flex;align-items:center;gap:16px;flex:0 0 auto;}
+  .ffb-stats .kpi{flex:0 0 auto;min-width:0;}
+  .ffb-stats .kpi .k-value{font-size:20px;}
+  .ffb-ring{flex:0 0 auto;width:74px;height:74px;position:relative;}
+  .ffb-ring canvas{position:absolute;inset:0;}
+  .ffb-ring .ring-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:800;color:var(--ink-900);}
+  .mini-table{width:100%;border-collapse:collapse;font-size:10px;flex:0 0 auto;}
+  .mini-table th{font-size:8.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-500);
+    text-align:right;padding:4px 0;border-bottom:1px solid var(--line);font-weight:700;}
+  .mini-table td{text-align:right;padding:4px 0;border-bottom:1px solid var(--line);font-weight:700;color:var(--ink-900);}
+  .mini-table th:first-child,.mini-table td:first-child{text-align:left;color:var(--ink-600);}
+  .mini-table tr:last-child td{border-bottom:none;}
+
+  /* FFB restan */
+  .restan-wrap{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;}
+  .restan-value{font-size:34px;font-weight:800;color:var(--ink-900);text-align:center;}
+  .restan-value .k-of{font-size:13px;font-weight:700;color:var(--ink-500);margin-left:4px;}
+  .restan-foot{display:flex;align-items:center;gap:8px;}
+
+  /* 4-up kpi icon row */
+  .kpi-icon{display:flex;align-items:center;gap:10px;padding:6px 2px;}
+  .kpi-icon .ic{flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:var(--accent-600);
+    display:flex;align-items:center;justify-content:center;}
+  .kpi-icon .ic svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  .kpi-icon .kb{flex:1 1 auto;min-width:0;}
+  .kpi-icon h4{margin:0 0 3px;font-size:9.5px;font-weight:700;color:var(--ink-500);text-transform:uppercase;letter-spacing:.03em;}
+  .kpi-icon .two{display:flex;justify-content:space-between;align-items:baseline;gap:6px;}
+  .kpi-icon .v{font-size:18px;font-weight:800;color:var(--ink-900);}
+  .kpi-icon .v small{font-size:10px;font-weight:700;color:var(--ink-500);margin-left:2px;}
+  .kpi-icon .m{font-size:9px;color:var(--ink-500);font-weight:700;}
+  .kpi-icon .dualv{display:flex;gap:14px;}
+  .kpi-icon .dualv .dv b{display:block;font-size:15px;color:var(--ink-900);}
+  .kpi-icon .dualv .dv span{font-size:8.5px;color:var(--ink-500);font-weight:700;}
+
+  /* quality grid (6 metrics, 2x3) */
+  .quality-grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr 1fr;
+    grid-template-rows:1fr 1fr 1fr;gap:9px 18px;}
+  .quality-grid .mrow .pbar{margin-top:1px;}
+
+  /* fertilizer page specific */
+  .foot-note{flex:0 0 auto;font-size:8.5px;color:var(--ink-500);line-height:1.3;}
+  .chart-subtitle{font-size:9px;font-weight:700;color:var(--ink-500);}
+
+  /* output & loss measure (area level) */
+  .loss-cols{display:flex;gap:9px;flex:1 1 auto;min-height:0;}
+  .loss-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:6px;
+    border-right:1px solid var(--line);padding-right:9px;}
+  .loss-col:last-child{border-right:none;padding-right:0;}
+  .loss-col .m-top{align-items:center;}
+  .loss-value{font-size:19px;font-weight:700;color:var(--ink-900);line-height:1.1;}
+  .loss-value .k-of{font-size:10px;font-weight:700;color:var(--ink-500);margin-left:4px;}
+  .kpi-badge-row{display:flex;align-items:center;gap:8px;}
+
+  /* estate-level production specifics */
+  .kpi4-row .panel-body{gap:9px;justify-content:center;padding:14px 13px;}
+  .kpi4-row .k-value{font-size:26px;}
+  .akp-note{flex:0 0 auto;font-size:8px;font-weight:600;color:var(--ink-500);line-height:1.3;}
+  .hk-kpis{display:flex;gap:14px;flex:1 1 auto;}
+  .hk-kpis .kpi{flex:1 1 0;}
+  .grading-body{flex-direction:row;align-items:center;gap:16px;}
+  .grading-donut{flex:0 0 150px;height:150px;position:relative;}
+  .grading-donut canvas{position:absolute;inset:0;}
+  .grading-list{flex:1 1 auto;display:flex;flex-direction:column;gap:9px;}
+  .grading-list .g-row{display:flex;align-items:center;gap:9px;}
+  .grading-list .g-row.lead .g-label{font-size:12px;}
+  .grading-list .g-row.lead .g-val{font-size:15px;}
+  .grading-list .g-swatch{width:11px;height:11px;border-radius:3px;flex:0 0 auto;}
+  .grading-list .g-label{flex:1 1 auto;font-size:10px;font-weight:700;color:var(--ink-600);}
+  .grading-list .g-val{font-size:12px;font-weight:700;color:var(--ink-900);
+    font-family:ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Liberation Mono",monospace;}
+  .grading-list .g-cap{font-size:8.5px;font-weight:700;color:var(--ink-500);min-width:60px;text-align:right;}
+
+  /* comparison grid */
+  .chips-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
+  .chips-row b{font-size:10.5px;color:var(--ink-600);margin-right:4px;}
+  .chip{padding:5px 12px;border:1px solid var(--accent-400);border-radius:20px;background:var(--neutral-0);
+    color:var(--accent-700);font-weight:700;font-size:10px;}
+  .chip:hover{background:var(--accent-600);color:#fff;border-color:var(--accent-600);}
+  .cmp-grid{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:185px;gap:9px;}
+  .cmp-card .panel-body{padding:6px 9px 8px;}
+  .cmp-card .m{font-size:8.5px;color:var(--ink-500);font-weight:700;margin-bottom:2px;}
+
+  /* ranking tables */
+  .ow{overflow-x:auto;flex:1 1 auto;}
+  .rk{width:100%;border-collapse:collapse;font-size:11px;}
+  .rk th{background:var(--accent-600);color:#fff;padding:7px 8px;text-align:center;font-size:9.5px;
+    text-transform:uppercase;letter-spacing:.03em;border:0;}
+  .rk td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;color:var(--ink-900);font-weight:600;}
+  .rk td:nth-child(-n+3){text-align:left;}
+  .rk td:first-child{text-align:center;}
+  .rank-badge{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;
+    background:var(--surface-tint);font-weight:800;font-size:10px;color:var(--ink-900);}
+  .fin-bar{display:block;padding:3px 8px;border-radius:4px;font-weight:800;}
+</style>
+</head>
+<body>
+<div class="fit">
+  <div class="canvas" id="canvas">
+
+    <div class="topbar">
+      <div class="topbar-brand">
+        <div class="topbar-logo"><img src="primeagri.png" alt="Prime Agri Resources"></div>
+        <div>
+          <span class="eyebrow">POES &middot; Estate Operation</span>
+          <h1>Estate Operation Dashboard</h1>
+        </div>
+      </div>
+      <div class="topbar-ctx" id="topbarCtx"></div>
+    </div>
+
+    <div class="tabbar">
+      <div class="tabnav" id="tabNav"></div>
+    </div>
+
+    <div class="grid">
+      <div class="rail" id="rail"></div>
+      <div class="col" id="col"></div>
+    </div>
+
+  </div>
+</div>
+<script>
+/* ============================================================
+   DATA — dummy figures reused 1:1 from the 7 static mockups and
+   from Update Mock Up Estate Operation 2.html where noted.
+   ============================================================ */
+const ESTATES = [
+  "ESTATE BABOTI","ESTATE BELIDA","ESTATE BUKIT MAKMUR","ESTATE BUKIT RAYA","ESTATE BUKIT SUBUR",
+  "ESTATE CAHAYA MURNI","ESTATE DAMAI SEJAHTERA","ESTATE HARAPAN JAYA","ESTATE MEKAR SARI","ESTATE SUMBER REJEKI"
+];
+const DATES7 = ['10/10','11/10','12/10','13/10','14/10','15/10','16/10'];
+
+// Production - Area - Daily - Measure=Production (8-panel, screenshot-driven)
+const FFB_DAILY = {
+  actual:903, budget:1000, achievement:90, achStatus:'warn',
+  rows:[
+    {name:'Nucleus', ach:86, budget:175, actual:150, status:'warn'},
+    {name:'Plasma', ach:125, budget:20, actual:25, status:'good'},
+    {name:'Third Parties', ach:75, budget:8, actual:6, status:'critical'},
+  ]
+};
+const FFB_RESTAN = {value:100, unit:'MT', pct:10, status:'critical'};
+const HARVEST_INTERVAL_AREA = {labels:['≤ 10 Hari','11-15 Hari','16-20 Hari','> 20 Hari'],
+  values:[365.75,47.5,23.75,38], status:['good','warn','critical','critical']};
+const KPI4_AREA = {
+  hdi:{value:25, status:'warn', note:'Normal AKP'},
+  att:{value:85, target:90, status:'critical'},
+  out:{kg:1063, kgTarget:1050, kgStatus:'good', ha:2.4, haTarget:2.5, haStatus:'warn'},
+  rain:{value:10, rainyDays:1, status:'warn'}
+};
+const PROD_TREND = [157,183,193,190,189,171,195];
+const PROD_BUDGET_FLAT = 195;
+const LEFTOVER_TREND = [31.93,0,62.26,0,0,50.69,25.76];
+
+// Production - Area - Measure=Output & Loss (kept as-is from estate-ops-production-area.html)
+const OUTPUT_KPI = {kg:1063,kgTarget:1050,kgPct:100,kgStatus:'good', ha:2.9, haTarget:3.0, haPct:97, haStatus:'good'};
+const OUT10_ACTUAL=[737.5,626.3,798.8,1407.2,165.5,1669.7,1484.7,1377.7,1332.4,1029.6];
+const OUT10_GAP=[162.5,273.7,101.3,0,434.5,0,0,0,0,170.4];
+const AREA_PER_WORKDAY = [3.0,2.75,1.45,1.44,2.04,1.15,1.67,1.59,1.62,1.27]; // Ha/HK, ref 3.0
+const OUTPUT_LOSSES = [
+  {title:'Fruit Left Behind (New)', value:'0.15', unit:'%', status:'good', lim:'max 1 %'},
+  {title:'Loose Fruit Left on Circle', value:'12', unit:'pcs/palm', status:'critical', lim:'max 2'},
+  {title:'Loose Fruit Left at TPH', value:'5', unit:'pcs/TPH', status:'critical', lim:'max 2'},
+];
+
+// Production - Estate level (kept as-is from estate-ops-production-estate.html)
+const ESTATE_KPI = {
+  ffb:{actual:1850, budget:2000, pct:93, status:'warn'},
+  hdi:{value:32, target:30, pct:107, status:'good'},
+  att:{value:88, target:90, pct:98, status:'warn'},
+  rain:{value:88, deficit:-8, status:'warn'}
+};
+const ESTATE_INTERVAL = {labels:['< 10 Day','11 - 15 Days','16 - 20 Days','> 20 Days'], values:[2712.47,447.77,55.77,0]};
+const ESTATE_OUTPUT = {kg:950,kgTarget:1000,kgPct:95,kgStatus:'warn', ha:2.4, haTarget:4.0, haPct:60, haStatus:'critical'};
+const ESTATE_LOSSES = [
+  {title:'Fruit Left Behind (New)', value:'0.15', unit:'%', status:'good', lim:'max 1 %'},
+  {title:'Loose Fruit Left on Circle', value:'12', unit:'pcs/palm', status:'critical', lim:'max 2'},
+  {title:'Loose Fruit Left at TPH', value:'5', unit:'pcs/TPH', status:'critical', lim:'max 2'},
+];
+const ESTATE_GRADING = [
+  {name:'Ripe', value:97.2, color:'#e2711d', cap:'good category', lead:true},
+  {name:'Unripe', value:0.3, color:'#4f7942', cap:'max 1%'},
+  {name:'Overripe', value:2.1, color:'#7b2d12', cap:'max 5%'},
+  {name:'Empty Bunch', value:0.4, color:'#9a9086', cap:'max 1%'},
+];
+function genTrend(n, start, end, noise){
+  const arr=[];
+  for(let i=0;i<n;i++){
+    const base = start + (end-start)*i/(n-1);
+    const wobble = (Math.sin(i*1.3)+Math.sin(i*0.7))*noise;
+    arr.push(Math.round((base+wobble)*10)/10);
+  }
+  return arr;
+}
+const TREND30_VALUES = genTrend(25, 1480, 2080, 60);
+const TREND30_TARGET = 1900;
+
+// FFB Quality & Losses tab (reused from Update Mock Up Estate Operation 2.html)
+const QUALITY_METRICS = [
+  {name:'Unripe', value:1.68, limType:'max', lim:0},
+  {name:'Underripe', value:0.03, limType:'max', lim:5},
+  {name:'Ripe', value:91.52, limType:'min', lim:89},
+  {name:'Overripe', value:5.96, limType:'max', lim:5},
+  {name:'Rotten', value:0.80, limType:'max', lim:1},
+  {name:'Loose Fruit', value:3.86, limType:'min', lim:7},
+];
+const QUALITY_TREND = {
+  labels: DATES7,
+  series:[
+    {label:'Unripe Fruit', data:[.66,1.2,0,.93,1.64,.67,1.44], status:'critical'},
+    {label:'Ripe Fruit', data:[98.37,96.6,98.39,96.03,93.34,95.24,95.51], status:'accent'},
+    {label:'Overripe Fruit', data:[.79,1.51,1.61,2.72,2.87,3.75,2.47], status:'warn'},
+    {label:'Rotten Fruit', data:[.18,.7,0,.32,2.15,.34,.58], status:'gold'},
+  ]
+};
+const LOSS_MINI = [
+  {title:'Unharvested Ripe Bunches (New)', value:0.15, unit:'%', target:1, status:'good'},
+  {title:'Loose Fruit Left on Palm Circle', value:12, unit:'pcs/palm', target:2, status:'critical'},
+  {title:'Loose Fruit Left at TPH', value:5, unit:'pcs/TPH', target:2, status:'critical'},
+];
+
+// Fertilizer & Upkeep tab
+const FERT_BY_ESTATE = {
+  target:[17.80,21.46,2.82,14.32,1.39,9.21,5.42,7.08,3.5,2.6],
+  actual:[16.2,19.8,2.3,12.6,1.15,8.3,4.6,6.2,2.95,2.2],
+};
+const FERT_TYPE = {labels:['Urea','MOP','Dolomite','Borate'], target:[9,7,5,1.2], actual:[8,6,4,1], totalActual:19, totalBudget:22.2, pct:86};
+const CROP_UPKEEP = {labels:['Circle Weeding','Interrow Upkeep','Pruning'], target:[10,8,5], actual:[8,6,4], totalActual:18, totalBudget:23, pct:78};
+
+// Comparison tab (reused from Update Mock Up Estate Operation 2.html)
+const AC = [59,58.87,19.17,209.67,4.8,103.52,166.29,158.43,98.6,24.71];
+const GP = [157.07,188.59,10.12,76.63,0,40.72,48.47,64.24,17.08,1.12];
+const SP_STATUS = ['critical','critical','critical','critical','good','warn','critical','critical','warn','good'];
+const ITV = [
+  [1737.19,1490.81,313.65,2674.41,365.75,1060.56,2568.79,2005.99,1660.69,359.79],
+  [214.71,327.25,46.87,150.25,47.5,131.08,295.26,174.43,90.26,42.33],
+  [0,0,0,180.3,23.75,0,88.58,0,54.15,21.16],
+  [0,0,0,0,38,0,0,0,0,0],
+];
+const AKP10 = [9.13,12.92,23,22.25,25,25,19.87,28.67,34.6,35];
+const ATT10 = [88.6,94,95.7,89.4,93.3,88.1,85.1,96.6,85.7,88];
+
+// Harvester Ranking tab (reused from Update Mock Up Estate Operation 2.html)
+const RANK_ROWS = [
+  {nik:'2023025466', name:'Dedi Hartono', final:1851},
+  {nik:'T000185158', name:'Bejo Bin Sumarto', final:1776},
+  {nik:'2019063405', name:'Anto Mariadi', final:1755},
+  {nik:'2025079265', name:'Ariyanto Bin Saimudin', final:1732},
+  {nik:'2026042091', name:'Selus Sugianto', final:1690},
+];
+
+const ICO = {
+  gauge:'<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  wt:'<circle cx="12" cy="5" r="3"/><path d="M6.5 8a2 2 0 0 0-1.9 1.46L2.1 18.5A2 2 0 0 0 4 21h16a2 2 0 0 0 1.9-2.5l-2.5-9.04A2 2 0 0 0 17.5 8Z"/>',
+  rain:'<path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/>'
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const STATE = {
+  region:'All Region', area:'All Area', estate:null,
+  period:'daily',
+  measure:'production',
+  tab:'production',
+};
+let openDropdown = null;
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const V = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = (n,d=0) => Number(n).toLocaleString('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d});
+const statusColor = s => ({good:V('--good'), warn:V('--warn'), critical:V('--critical'), accent:V('--accent-600')}[s] || V('--accent-600'));
+
+function panel(title, bodyHtml, opts={}){
+  const sub = opts.sub ? `<span class="sub">${opts.sub}</span>` : (opts.clegend || '');
+  const style = opts.flex ? ` style="flex:${opts.flex}"` : (opts.style ? ` style="${opts.style}"` : '');
+  const cls = opts.cls ? ` ${opts.cls}` : '';
+  return `<div class="panel${cls}"${style}><div class="panel-head"><h2>${title}</h2>${sub}</div><div class="panel-body"${opts.bodyStyle?` style="${opts.bodyStyle}"`:''}>${bodyHtml}</div></div>`;
+}
+function chartHost(id){ return `<div class="chart"><canvas id="${id}"></canvas></div>`; }
+function row(innerHtml, heightPx){ return `<div class="row" style="flex:${heightPx?`0 0 ${heightPx}px`:'1 1 auto'}">${innerHtml}</div>`; }
+function clegend(items){ return `<div class="clegend">${items.map(([label,cls])=>`<div class="ci"><span class="cs ${cls}"></span>${label}</div>`).join('')}</div>`; }
+function badge(text,status){ return `<span class="badge ${status}">${text}</span>`; }
+function pbar(pct,status){ return `<div class="pbar"><div class="fill ${status}" style="width:${Math.min(100,pct)}%"></div></div>`; }
+function mrow(label,val,lim,status,pct){
+  return `<div class="mrow"><div class="m-top"><span>${label}</span><span class="m-val">${val}</span></div><div class="m-lim">${lim}</div>${pbar(pct,status)}</div>`;
+}
+
+/* ============================================================
+   CHART.JS FACTORY / PLUGINS
+   ============================================================ */
+let CHARTS = [];
+function destroyCharts(){ CHARTS.forEach(c=>c.destroy()); CHARTS = []; }
+
+const ValueLabel = {
+  id:'valueLabel',
+  afterDatasetsDraw(chart){
+    const opt = chart.options.plugins.valueLabel;
+    if(!opt || !opt.show) return;
+    const ctx = chart.ctx; const h = chart.options.indexAxis==='y';
+    ctx.save(); ctx.font='700 9.5px Roboto, sans-serif'; ctx.fillStyle = V('--ink-900');
+    chart.data.datasets.forEach((ds,i)=>{
+      if(ds.noLabel) return;
+      const meta = chart.getDatasetMeta(i);
+      if(meta.hidden) return;
+      meta.data.forEach((pt,j)=>{
+        const v = ds.data[j]; if(v==null) return;
+        ctx.textAlign = h ? 'left' : 'center';
+        ctx.textBaseline = h ? 'middle' : 'bottom';
+        const f = opt.formatter || (x=>fmt(x, opt.decimals||0));
+        ctx.fillText(f(v), h? pt.x+6 : pt.x, h? pt.y : pt.y-4);
+      });
+    });
+    ctx.restore();
+  }
+};
+const CenterText = {
+  id:'centerText',
+  afterDraw(chart){
+    const opt = chart.options.plugins.centerText;
+    if(!opt || !opt.text) return;
+    const {ctx, chartArea:{left,right,top,bottom}} = chart;
+    const cx = (left+right)/2, cy = (top+bottom)/2;
+    ctx.save();
+    ctx.font = (opt.font||'800 15px Roboto, sans-serif');
+    ctx.fillStyle = opt.color || V('--ink-900');
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(opt.text, cx, cy);
+    ctx.restore();
+  }
+};
+Chart.register(ValueLabel, CenterText);
+Chart.defaults.font.family = "Roboto, 'Segoe UI', sans-serif";
+Chart.defaults.color = V('--ink-500');
+
+function mkChart(id, type, labels, datasets, opts={}){
+  const el = document.getElementById(id);
+  if(!el) return null;
+  const h = opts.h;
+  const c = new Chart(el, {
+    type, data:{labels, datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false, indexAxis: h?'y':'x',
+      animation:{duration:450},
+      onClick: (e,active)=>{ if(opts.clickEstate && active.length){ drillToEstate(ESTATES[active[0].index]); } },
+      onHover: (e,active)=>{ if(opts.clickEstate) e.native.target.style.cursor = active.length?'pointer':'default'; },
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{display:!!opts.legend, position:'top', align:'end', labels:{boxWidth:10, boxHeight:10, color:V('--ink-600'), font:{size:10, weight:'700'}}},
+        tooltip:{displayColors:false, backgroundColor:'rgba(22,35,31,.94)', padding:9, cornerRadius:6, titleFont:{weight:'700'}},
+        valueLabel:{show:opts.valueLabel, decimals:opts.decimals, formatter:opts.formatter},
+        centerText: opts.centerText
+      },
+      scales: opts.noScales ? {} : {
+        x:{stacked:opts.stack, grid:{display:h, color:V('--line')}, border:{display:false}, ticks:{color:V('--ink-500'), font:{size:9}}},
+        y:{stacked:opts.stack, min:opts.min, max:opts.max, grid:{display:!h, color:V('--line')}, border:{display:false}, ticks:{color:V('--ink-500'), font:{size:9}}}
+      }
+    }
+  });
+  CHARTS.push(c);
+  return c;
+}
+function mkLine(id, labels, data, target, opts={}){
+  const ds = [{
+    label:'Actual', data, borderColor:V('--accent-600'), backgroundColor:V('--accent-600')+'33',
+    fill: opts.area ? 'origin' : false, borderWidth:2.5, pointRadius:3, pointBackgroundColor:V('--accent-600'), tension:.3
+  }];
+  if(target!=null){
+    ds.push({label:'Target', data:data.map(()=>target), borderColor:V('--warn'), borderDash:[5,4],
+      pointRadius:0, borderWidth:1.6, fill:false, noLabel:true});
+  }
+  return mkChart(id,'line',labels,ds,{legend:!!target, valueLabel:true, decimals:opts.decimals||0, min:opts.min, max:opts.max});
+}
+function mkDonut(id, pct, status){
+  return mkChart(id,'doughnut',['Achieved','Remaining'],[{
+    data:[pct, Math.max(0,100-pct)], backgroundColor:[statusColor(status), V('--line')], borderWidth:0
+  }],{noScales:true, centerText:{text:pct+'%'}});
+}
+function mkGradingDonut(id, rows){
+  return mkChart(id,'doughnut',rows.map(r=>r.name), [{
+    data: rows.map(r=>r.value), backgroundColor: rows.map(r=>r.color), borderWidth:2, borderColor:V('--neutral-0')
+  }],{noScales:true});
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+function renderSidebar(){
+  const measureBlock = (STATE.tab==='production' && STATE.estate===null) ? `
+    <div class="mswitch-inline">
+      <div class="field"><label>Measure</label></div>
+      <div class="mswitch" data-group="measure">
+        <button data-measure="production" class="${STATE.measure==='production'?'active':''}">Production</button>
+        <button data-measure="output" class="${STATE.measure==='output'?'active':''}">Output &amp; Loss</button>
+      </div>
+    </div>` : '';
+
+  const regionOpts = ['All Region','Sumatera','Kalimantan'];
+  const areaOpts = ['All Area','Area 1','Area 2','Area 3','Area 4'];
+  const estateOpts = ['All Estate', ...ESTATES];
+  const ddMenu = (field, opts, current) => openDropdown===field ? `
+    <div class="dd-menu">${opts.map(o=>`<div class="dd-opt ${o===current?'active':''}" data-field="${field}" data-val="${o}">${o}</div>`).join('')}</div>` : '';
+  const ddField = (field, label, current, opts) => `
+    <div class="field">
+      <div class="dd" data-field="${field}">
+        <button type="button" class="dd-btn ${openDropdown===field?'open':''}" data-dd="${field}">${label}<span class="chev"></span></button>
+        ${ddMenu(field, opts, current)}
+      </div>
+    </div>`;
+
+  $('#rail').innerHTML = `
+    <div class="panel filter-panel">
+      <div class="panel-head"><h2>Estate Selection</h2></div>
+      <div class="panel-body">
+        ${ddField('region', 'REGION', STATE.region, regionOpts)}
+        ${ddField('area', 'AREA', STATE.area, areaOpts)}
+        ${ddField('estate', 'ESTATE', STATE.estate===null?'All Estate':STATE.estate, estateOpts)}
+        <button type="button" class="btn btn-reset" id="resetSel">Reset selection</button>
+        ${measureBlock}
+      </div>
+    </div>
+
+    <div class="panel period-panel">
+      <div class="panel-head"><h2>Period</h2></div>
+      <div class="panel-body">
+        <div class="period-toggle" data-group="period">
+          <button data-period="daily" class="${STATE.period==='daily'?'active':''}">Daily</button>
+          <button data-period="monthly" class="${STATE.period==='monthly'?'active':''}">Monthly</button>
+          <button data-period="yearly" class="${STATE.period==='yearly'?'active':''}">Yearly</button>
+        </div>
+        ${STATE.period==='daily' ? `
+        <div class="date-field">
+          <div class="datebox">
+            <svg class="cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>
+            <span>25 Sep 2026</span>
+          </div>
+        </div>` : ''}
+        ${STATE.period==='monthly' ? `
+        <div class="date-field">
+          <div class="daterange">
+            <div class="dr-row">
+              <div class="datebox"><svg class="cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg><span>19 Sep 2026</span></div>
+              <span class="dr-sep">&rarr;</span>
+              <div class="datebox"><svg class="cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg><span>25 Sep 2026</span></div>
+            </div>
+            <div class="dr-slider"><div class="dr-fill" style="left:60%;width:20%;"></div><div class="dr-handle" style="left:60%;"></div><div class="dr-handle" style="left:80%;"></div></div>
+          </div>
+        </div>` : ''}
+        ${STATE.period==='yearly' ? `
+        <div class="date-field">
+          <div class="yearpick"><select id="yearPick"><option>2024</option><option>2025</option><option selected>2026</option></select></div>
+        </div>` : ''}
+      </div>
+    </div>
+
+    <div class="panel legend-panel">
+      <div class="panel-head"><h2>Legend</h2></div>
+      <div class="panel-body">
+        <div class="legend-item"><span class="legend-dot good"></span>On target</div>
+        <div class="legend-item"><span class="legend-dot warn"></span>Near limit</div>
+        <div class="legend-item"><span class="legend-dot critical"></span>Off target</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+function renderTopbar(){
+  $('#topbarCtx').innerHTML = `
+    <div class="cx"><b>${STATE.region}</b><span>Region</span></div>
+    <div class="cx"><b>${STATE.area}</b><span>Area</span></div>
+    <div class="cx"><b>${STATE.estate ? STATE.estate : 'All Estate'}</b><span>Estate</span></div>
+  `;
+  const tabs = [
+    ['production','Production'],
+    ['quality','FFB Quality &amp; Losses'],
+    ['fertilizer','Fertilizer &amp; Upkeep'],
+    ['comparison', STATE.estate===null ? 'Comparison' : 'Harvester Rank'],
+  ];
+  $('#tabNav').innerHTML = tabs.map(([key,label])=>
+    `<button data-tab="${key}" class="${STATE.tab===key?'active':''}">${label}</button>`
+  ).join('');
+}
+
+/* ============================================================
+   PAGE: PRODUCTION
+   ============================================================ */
+function pageProductionAreaProduction(){
+  const r = FFB_DAILY;
+  const tableRows = r.rows.map(x=>`<tr><td>${x.name}</td><td class="${x.status}">${x.ach}%</td><td>${fmt(x.budget,0)}</td><td>${fmt(x.actual,0)}</td></tr>`).join('');
+  const panel1 = panel('Daily FFB Production',`
+    <div class="ffb-stats">
+      <div class="kpi"><span class="k-label">Total Actual</span><span class="k-value mono">${fmt(r.actual)}<span class="k-of">MT</span></span></div>
+      <div class="kpi"><span class="k-label">Total Budget</span><span class="k-value mono">${fmt(r.budget)}<span class="k-of">MT</span></span></div>
+      <div class="ffb-ring"><canvas id="c_achv"></canvas></div>
+    </div>
+    <table class="mini-table"><thead><tr><th>Segment</th><th>% Ach</th><th>Budget NP (T)</th><th>Actual (T)</th></tr></thead><tbody>${tableRows}</tbody></table>
+  `, {sub:'25 Sep 2026', flex:'1.4 1 0'});
+
+  const fr = FFB_RESTAN;
+  const panel2 = panel('FFB Restan', `
+    <div class="restan-wrap">
+      <div class="restan-value">${fmt(fr.value)}<span class="k-of">${fr.unit}</span></div>
+      <div class="restan-foot">${badge(fr.pct+'%', fr.status)}<span style="font-size:9px;color:var(--ink-500);font-weight:700;">Of FFB Harvest</span></div>
+      ${pbar(fr.pct, fr.status)}
+    </div>
+  `, {flex:'.7 1 0'});
+
+  const hi = HARVEST_INTERVAL_AREA;
+  const panel3 = panel('Harvesting Interval', chartHost('c_interval'), {flex:'1.5 1 0', sub:'Area (ha)'});
+
+  const kpi4 = KPI4_AREA;
+  const row2 = `
+    <div class="panel"><div class="panel-body"><div class="kpi-icon">
+      <div class="ic"><svg viewBox="0 0 24 24">${ICO.gauge}</svg></div>
+      <div class="kb"><h4>Harvest Density Index</h4><div class="two"><span class="badge ${kpi4.hdi.status}">${kpi4.hdi.note}</span><span class="v">${kpi4.hdi.value}<small>%</small></span></div></div>
+    </div></div></div>
+    <div class="panel"><div class="panel-body"><div class="kpi-icon">
+      <div class="ic"><svg viewBox="0 0 24 24">${ICO.users}</svg></div>
+      <div class="kb"><h4>Harvester Attendance Rate</h4><div class="two"><span class="m">Target ${kpi4.att.target}%</span><span class="v ${kpi4.att.status}">${kpi4.att.value}<small>%</small></span></div>${pbar(kpi4.att.value, kpi4.att.status)}</div>
+    </div></div></div>
+    <div class="panel"><div class="panel-body"><div class="kpi-icon">
+      <div class="ic"><svg viewBox="0 0 24 24">${ICO.wt}</svg></div>
+      <div class="kb"><h4>Harvester Output</h4><div class="dualv">
+        <div class="dv"><b class="${kpi4.out.kgStatus}">${fmt(kpi4.out.kg)}</b><span>/ ${fmt(kpi4.out.kgTarget)} Kg/HK</span></div>
+        <div class="dv"><b class="${kpi4.out.haStatus}">${kpi4.out.ha}</b><span>/ ${kpi4.out.haTarget} Ha/HK</span></div>
+      </div></div>
+    </div></div></div>
+    <div class="panel"><div class="panel-body"><div class="kpi-icon">
+      <div class="ic"><svg viewBox="0 0 24 24">${ICO.rain}</svg></div>
+      <div class="kb"><h4>Rainfall</h4><div class="two"><span class="m">Rainy Days: ${kpi4.rain.rainyDays}</span><span class="v">${kpi4.rain.value}<small>mm</small></span></div></div>
+    </div></div></div>
+  `;
+
+  const panelProd = panel('FFB Production', chartHost('c_prod'), {sub:'Actual vs Budget'});
+  const panelLeft = panel('FFB Leftover', chartHost('c_left'), {sub:'Restan (Ton)'});
+  const panelHdi = panel('Harvesting Density Index', chartHost('c_hdi'), {sub:'AKP %'});
+  const panelAtt = panel('Harvester Attendance Rate', chartHost('c_att'), {sub:'%'});
+
+  $('#col').innerHTML = `
+    ${row(panel1 + panel2 + panel3, 210)}
+    ${row(row2, 92)}
+    ${row(panelProd + panelLeft, 210)}
+    ${row(panelHdi + panelAtt, 210)}
+  `;
+
+  mkDonut('c_achv', r.achievement, r.achStatus);
+  mkChart('c_interval','bar', hi.labels, [{label:'Hari', data:hi.values, backgroundColor: hi.status.map(statusColor), borderRadius:4}], {h:true, valueLabel:true, decimals:0});
+  mkLine('c_prod', DATES7, PROD_TREND, PROD_BUDGET_FLAT, {decimals:0, min:0, max:250, area:true});
+  mkLine('c_left', DATES7, LEFTOVER_TREND, null, {decimals:1, min:0, max:70, area:true});
+  mkLine('c_hdi', DATES7, PROD_TREND, PROD_BUDGET_FLAT, {decimals:0, min:0, max:250});
+  mkLine('c_att', DATES7, PROD_TREND, PROD_BUDGET_FLAT, {decimals:0, min:0, max:250});
+}
+
+function pageProductionAreaOutput(){
+  const o = OUTPUT_KPI;
+  const kpiRow = `
+    <div class="panel"><div class="panel-head"><h2>Harvester Output</h2><span class="sub">Kg/HK</span></div><div class="panel-body">
+      <div class="kpi"><div class="k-label">Actual vs Target</div><div class="k-value mono">${fmt(o.kg)}<span class="k-of">/ ${fmt(o.kgTarget)} Kg/HK</span></div>
+      <div class="kpi-badge-row">${badge(o.kgPct+'%', o.kgStatus)}<div style="flex:1 1 auto">${pbar(o.kgPct,o.kgStatus)}</div></div></div>
+    </div></div>
+    <div class="panel"><div class="panel-head"><h2>Area per Workday</h2><span class="sub">Ha/HK</span></div><div class="panel-body">
+      <div class="kpi"><div class="k-label">Actual vs Target</div><div class="k-value mono">${o.ha}<span class="k-of">/ ${o.haTarget} Ha/HK</span></div>
+      <div class="kpi-badge-row">${badge(o.haPct+'%', o.haStatus)}<div style="flex:1 1 auto">${pbar(o.haPct,o.haStatus)}</div></div></div>
+    </div></div>
+  `;
+  const chartsRow = panel('Harvester Output by Estate (Kg/HK)', chartHost('c_outByEstate'), {clegend: clegend([['Actual','actual'],['Gap to target','budget']])}) +
+    panel('Area per Workday by Estate (Ha/HK)', chartHost('c_awdByEstate'), {sub:'Ref: 3.0 Ha/HK'});
+  const lossCols = OUTPUT_LOSSES.map(l=>`
+    <div class="loss-col"><div class="mrow">
+      <div class="m-top"><span>${l.title}</span>${badge(l.status==='good'?'Good':'Off target', l.status)}</div>
+      <div class="loss-value mono">${l.value}<span class="k-of">${l.unit}</span></div>
+      <div class="m-lim">${l.lim}</div>
+    </div></div>`).join('');
+  const lossRow = panel('Harvest Losses', `<div class="loss-cols">${lossCols}</div><div class="foot-note">TPH - fruit collection point at the roadside</div>`);
+
+  $('#col').innerHTML = `
+    ${row(kpiRow, 100)}
+    ${row(chartsRow, 340)}
+    ${row(lossRow, 130)}
+  `;
+
+  mkChart('c_outByEstate','bar', ESTATES, [
+    {label:'Actual', data:OUT10_ACTUAL, backgroundColor:V('--accent-600'), stack:'s', borderRadius:3, clickable:true},
+    {label:'Gap to target', data:OUT10_GAP, backgroundColor:V('--accent-200'), stack:'s', borderRadius:3, noLabel:true},
+  ], {stack:true, legend:false, clickEstate:true, valueLabel:true, decimals:0});
+  mkChart('c_awdByEstate','bar', ESTATES, [
+    {label:'Ha/HK', data:AREA_PER_WORKDAY, backgroundColor:AREA_PER_WORKDAY.map(v=>statusColor(v>=3.0?'good':'critical')), borderRadius:3},
+    {label:'Ref', data:AREA_PER_WORKDAY.map(()=>3.0), type:'line', borderColor:V('--ink-500'), borderDash:[5,4], pointRadius:0, borderWidth:1.6, noLabel:true}
+  ], {clickEstate:true, valueLabel:true, decimals:2});
+}
+
+function pageProductionEstate(){
+  const k = ESTATE_KPI;
+  const kpi4 = `
+    <div class="panel"><div class="panel-head"><h2>FFB Production</h2><span class="sub">Today</span></div><div class="panel-body">
+      <div class="kpi"><span class="k-value mono">${fmt(k.ffb.actual)}<span class="k-of">/ ${fmt(k.ffb.budget)} Ton</span></span></div>
+      <div style="display:flex;justify-content:flex-end">${badge(k.ffb.pct+'%', k.ffb.status)}</div>${pbar(k.ffb.pct,k.ffb.status)}
+    </div></div>
+    <div class="panel"><div class="panel-head"><h2>Harvest Density Index</h2><span class="sub">AKP</span></div><div class="panel-body">
+      <div class="kpi"><span class="k-value mono">${k.hdi.value}%</span><span class="k-sub">Target &ge; ${k.hdi.target}%</span></div>
+      <div style="display:flex;justify-content:flex-end">${badge(k.hdi.pct+'%', k.hdi.status)}</div>${pbar(100,k.hdi.status)}
+      <div class="akp-note">AKP &ndash; fruit-ripeness estimate used for production forecasting</div>
+    </div></div>
+    <div class="panel"><div class="panel-head"><h2>Harvester Attendance</h2><span class="sub">Today</span></div><div class="panel-body">
+      <div class="kpi"><span class="k-value mono">${k.att.value}%</span><span class="k-sub">Target &ge; ${k.att.target}%</span></div>
+      <div style="display:flex;justify-content:flex-end">${badge(k.att.pct+'%', k.att.status)}</div>
+    </div></div>
+    <div class="panel"><div class="panel-head"><h2>Rainfall</h2><span class="sub">Today</span></div><div class="panel-body">
+      <div class="kpi"><span class="k-value mono">${k.rain.value}<span class="k-of">mm</span></span><span class="k-sub">Water Deficit: <b>${k.rain.deficit}mm</b></span></div>
+      <div style="display:flex;justify-content:flex-end">${badge('Monitor', k.rain.status)}</div>
+    </div></div>
+  `;
+
+  const hi = ESTATE_INTERVAL;
+  const top = panel('Harvest Interval Today', chartHost('c_estInterval'), {sub:'Area by days since last harvest (ha)'}) +
+    panel('Harvester Output', `
+      <div class="hk-kpis">
+        <div class="kpi"><div class="k-label">Harvester Output</div><div class="k-value mono">${fmt(ESTATE_OUTPUT.kg)}<span class="k-of">/ ${fmt(ESTATE_OUTPUT.kgTarget)} Kg/HK</span></div>
+          <div class="kpi-badge-row">${badge(ESTATE_OUTPUT.kgPct+'%', ESTATE_OUTPUT.kgStatus)}<div style="flex:1 1 auto">${pbar(ESTATE_OUTPUT.kgPct, ESTATE_OUTPUT.kgStatus)}</div></div></div>
+        <div class="kpi"><div class="k-label">Area per Workday</div><div class="k-value mono">${ESTATE_OUTPUT.ha}<span class="k-of">/ ${ESTATE_OUTPUT.haTarget} Ha/HK</span></div>
+          <div class="kpi-badge-row">${badge(ESTATE_OUTPUT.haPct+'%', ESTATE_OUTPUT.haStatus)}<div style="flex:1 1 auto">${pbar(ESTATE_OUTPUT.haPct, ESTATE_OUTPUT.haStatus)}</div></div></div>
+      </div>`, {sub:'Actual vs Target'});
+
+  const lossCols = ESTATE_LOSSES.map(l=>`
+    <div class="mrow"><div class="m-top"><span>${l.title}</span>${badge(l.status==='good'?'Good':'Off target', l.status)}</div>
+    <div class="loss-value mono">${l.value}<span class="k-of">${l.unit}</span></div><div class="m-lim">${l.lim}</div></div>`).join('');
+  const bottom = panel('Harvest Losses', lossCols+'<div class="foot-note">TPH - fruit collection point at the roadside</div>') +
+    panel('Fruit Grading', `
+      <div class="grading-donut"><canvas id="c_grading"></canvas></div>
+      <div class="grading-list">${ESTATE_GRADING.map(g=>`
+        <div class="g-row ${g.lead?'lead':''}"><span class="g-swatch" style="background:${g.color}"></span>
+          <span class="g-label">${g.name}</span><span class="g-val">${g.value}%</span><span class="g-cap">${g.cap}</span></div>`).join('')}</div>
+    `, {sub:'Share of bunches graded', bodyStyle:'flex-direction:row;align-items:center;gap:16px'});
+
+  const showTrend = STATE.period==='daily';
+  const trend = showTrend ? panel('FFB Production &mdash; 30-Day Trend', chartHost('c_trend30')) : '';
+
+  $('#col').innerHTML = `
+    ${row(kpi4, 128)}
+    ${row(top, 202)}
+    ${row(bottom, showTrend ? 233 : 0)}
+    ${trend ? row(trend, 150) : ''}
+  `;
+
+  mkChart('c_estInterval','bar', hi.labels, [{label:'Ha', data:hi.values, backgroundColor:V('--accent-600'), borderRadius:4}], {h:true, valueLabel:true, decimals:2});
+  mkGradingDonut('c_grading', ESTATE_GRADING);
+  if(showTrend){
+    mkLine('c_trend30', TREND30_VALUES.map((_,i)=>i%5===0?('d'+(i+1)):''), TREND30_VALUES, TREND30_TARGET, {decimals:0});
+  }
+}
+
+function pageProduction(){
+  if(STATE.estate===null){
+    STATE.measure==='production' ? pageProductionAreaProduction() : pageProductionAreaOutput();
+  } else {
+    pageProductionEstate();
+  }
+}
+
+/* ============================================================
+   PAGE: FFB QUALITY & LOSSES
+   ============================================================ */
+function pageQuality(){
+  const qualityList = QUALITY_METRICS.map(m=>{
+    const ok = m.limType==='max' ? m.value<=m.lim : m.value>=m.lim;
+    const status = ok?'good':'critical';
+    const pct = m.lim ? Math.min(100,(m.value/m.lim)*100) : 100;
+    return mrow(m.name, m.value.toFixed(2)+'%', (m.limType==='max'?'Max ':'Min ')+m.lim+'%', status, pct);
+  }).join('');
+  const panelList = panel('FFB Quality', `<div class="quality-grid">${qualityList}</div>`, {flex:'.9 1 0', sub:'% of fruit graded'});
+  const panelTrend = panel('FFB Quality', chartHost('c_qualityTrend'), {flex:'1.3 1 0', sub:'% of fruit graded over time'});
+
+  const minis = LOSS_MINI.map(m=>panel(m.title, `
+    <div style="display:flex;align-items:center;gap:6px;justify-content:space-between;">
+      <div class="k-value mono" style="font-size:22px;">${m.value}<span class="k-of">${m.unit}</span></div>
+      ${badge(m.status==='good'?'On target':'Off target', m.status)}
+    </div>
+    <div style="font-size:9px;color:var(--ink-500);font-weight:700;margin-top:2px;">Max ${m.target}</div>
+    ${pbar(Math.min(100,(m.value/m.target)*100), m.status)}
+  `)).join('');
+
+  $('#col').innerHTML = `
+    ${row(panelList + panelTrend, 360)}
+    ${row(minis, 160)}
+  `;
+
+  const colors = {accent:V('--accent-600'), critical:V('--critical'), warn:V('--warn'), gold:'#c98a1b'};
+  mkChart('c_qualityTrend','bar', QUALITY_TREND.labels, QUALITY_TREND.series.map(s=>({
+    label:s.label, data:s.data, backgroundColor:colors[s.status]||V('--accent-600'), stack:'q', noLabel:true
+  })), {stack:true, legend:true, max:100});
+}
+
+/* ============================================================
+   PAGE: FERTILIZER & UPKEEP
+   ============================================================ */
+function pageFertilizerArea(){
+  const topStrip = panel('Fertilizer Application vs Target by Estate (tons)', chartHost('c_fertByEstate'), {clegend: clegend([['Actual','actual'],['Target','budget']])});
+  const fertCard = panel('Fertilizer Application', `
+      <div class="kpi"><span class="k-label">Total Applied (tons)</span><span class="k-value mono">${FERT_TYPE.totalActual} ${badge(FERT_TYPE.pct+'%','critical')}</span>
+      <span class="k-sub">of ${FERT_TYPE.totalBudget} t budget</span>${pbar(FERT_TYPE.pct,'critical')}</div>
+      <div class="chart-subtitle">By Fertilizer Type (tons)</div>
+      ${chartHost('c_fertType')}
+      <div class="foot-note">Types: Urea, MOP (KCl), Dolomite, Borate</div>
+    `, {clegend: clegend([['Budget','budget'],['Actual','actual']])});
+  const cropCard = panel('Crop Upkeep', `
+      <div class="kpi"><span class="k-label">Total Area Maintained (ha)</span><span class="k-value mono">${CROP_UPKEEP.totalActual} ${badge(CROP_UPKEEP.pct+'%','critical')}</span>
+      <span class="k-sub">of ${CROP_UPKEEP.totalBudget} ha budget</span>${pbar(CROP_UPKEEP.pct,'critical')}</div>
+      <div class="chart-subtitle">By Activity (ha)</div>
+      ${chartHost('c_cropUpkeep')}
+      <div class="foot-note">Circle: weed-free ring around the palm &mdash; Interrow: upkeep of lanes between rows &mdash; Pruning: frond removal</div>
+    `, {clegend: clegend([['Budget','budget'],['Actual','actual']])});
+
+  $('#col').innerHTML = `
+    ${row(topStrip, 190)}
+    ${row(fertCard + cropCard, 420)}
+  `;
+
+  mkChart('c_fertByEstate','bar', ESTATES, [
+    {label:'Actual', data:FERT_BY_ESTATE.actual, backgroundColor:V('--accent-600'), clickable:true},
+    {label:'Target', data:FERT_BY_ESTATE.target, backgroundColor:V('--accent-200')},
+  ], {legend:false, clickEstate:true, valueLabel:true, decimals:1});
+  mkChart('c_fertType','bar', FERT_TYPE.labels, [
+    {label:'Budget', data:FERT_TYPE.target, backgroundColor:V('--accent-200')},
+    {label:'Actual', data:FERT_TYPE.actual, backgroundColor:V('--accent-600')},
+  ], {legend:false, valueLabel:true, decimals:1});
+  mkChart('c_cropUpkeep','bar', CROP_UPKEEP.labels, [
+    {label:'Budget', data:CROP_UPKEEP.target, backgroundColor:V('--accent-200')},
+    {label:'Actual', data:CROP_UPKEEP.actual, backgroundColor:V('--accent-600')},
+  ], {legend:false, valueLabel:true, decimals:1});
+}
+function pageFertilizerEstate(){
+  const fertCard = panel('Fertilizer Application', `
+      <div class="kpi"><span class="k-label">Total Applied (tons)</span><span class="k-value mono">${FERT_TYPE.totalActual} ${badge(FERT_TYPE.pct+'%','critical')}</span>
+      <span class="k-sub">of ${FERT_TYPE.totalBudget} t budget</span>${pbar(FERT_TYPE.pct,'critical')}</div>
+      <div class="chart-subtitle">By Fertilizer Type (tons)</div>
+      ${chartHost('c_fertTypeE')}
+      <div class="foot-note">Types: Urea, MOP (KCl), Dolomite, Borate</div>
+    `, {clegend: clegend([['Budget','budget'],['Actual','actual']])});
+  const cropCard = panel('Crop Upkeep', `
+      <div class="kpi"><span class="k-label">Total Area Maintained (ha)</span><span class="k-value mono">${CROP_UPKEEP.totalActual} ${badge(CROP_UPKEEP.pct+'%','critical')}</span>
+      <span class="k-sub">of ${CROP_UPKEEP.totalBudget} ha budget</span>${pbar(CROP_UPKEEP.pct,'critical')}</div>
+      <div class="chart-subtitle">By Activity (ha)</div>
+      ${chartHost('c_cropUpkeepE')}
+      <div class="foot-note">Circle: weed-free ring around the palm &mdash; Interrow: upkeep of lanes between rows &mdash; Pruning: frond removal</div>
+    `, {clegend: clegend([['Budget','budget'],['Actual','actual']])});
+
+  $('#col').innerHTML = row(fertCard + cropCard, 0);
+
+  mkChart('c_fertTypeE','bar', FERT_TYPE.labels, [
+    {label:'Budget', data:FERT_TYPE.target, backgroundColor:V('--accent-200')},
+    {label:'Actual', data:FERT_TYPE.actual, backgroundColor:V('--accent-600')},
+  ], {legend:false, valueLabel:true, decimals:1});
+  mkChart('c_cropUpkeepE','bar', CROP_UPKEEP.labels, [
+    {label:'Budget', data:CROP_UPKEEP.target, backgroundColor:V('--accent-200')},
+    {label:'Actual', data:CROP_UPKEEP.actual, backgroundColor:V('--accent-600')},
+  ], {legend:false, valueLabel:true, decimals:1});
+}
+function pageFertilizer(){
+  STATE.estate===null ? pageFertilizerArea() : pageFertilizerEstate();
+}
+
+/* ============================================================
+   PAGE: COMPARISON  /  HARVESTER RANKING
+   ============================================================ */
+function cmpCard(id, title, sub){
+  return `<div class="panel cmp-card"><div class="panel-head"><h2>${title}</h2></div><div class="panel-body"><div class="m">${sub}</div>${chartHost(id)}</div></div>`;
+}
+function pageComparison(){
+  const chips = `<div class="panel"><div class="panel-body"><div class="chips-row"><b>Buka dashboard estate:</b>
+    ${ESTATES.map(e=>`<button class="chip" data-estate="${e}">${e}</button>`).join('')}
+  </div></div></div>`;
+
+  const grid = `<div class="cmp-grid">
+    ${cmpCard('m_prod','FFB Production','By estate')}
+    ${cmpCard('m_left','FFB Leftover','By estate')}
+    ${cmpCard('m_int','Harvesting Interval','By estate')}
+    ${cmpCard('m_akp','Harvest Density Index (AKP)','By estate &middot; % ripe bunches')}
+    ${cmpCard('m_att','Harvester Attendance (%)','By estate &middot; Target 90%')}
+    ${cmpCard('m_out','Harvester Output','By estate')}
+    ${cmpCard('m_unr','Unripe','By estate')}
+    ${cmpCard('m_rip','Ripe','By estate')}
+    ${cmpCard('m_los','Loose Fruit','By estate')}
+    ${cmpCard('m_akp2','Unharvested Ripe Bunches (New)','By estate')}
+    ${cmpCard('m_att2','Loose Fruit Left on Palm Circle','By estate &middot; Target 90%')}
+    ${cmpCard('m_out2','Loose Fruit Left at TPH','By estate')}
+  </div>`;
+
+  $('#col').innerHTML = row(chips, 50) + row(grid, 0);
+
+  const pg = id => mkChart(id,'bar', ESTATES, [
+    {label:'Actual', data:AC, backgroundColor:SP_STATUS.map(statusColor), stack:'s', clickable:true},
+    {label:'Gap', data:GP, backgroundColor:V('--accent-200'), stack:'s', noLabel:true},
+  ], {stack:true, clickEstate:true, legend:false});
+  const interval = id => mkChart(id,'bar', ESTATES, ITV.map((d,i)=>({
+    label:['< 10 Day','11 - 15 Days','16 - 20 Days','> 20 Days'][i], data:d,
+    backgroundColor:[V('--accent-600'),'#e8928c','#e06a62',V('--critical')][i], stack:'s', clickable:true
+  })), {stack:true, clickEstate:true, legend:false});
+  const akp = id => mkChart(id,'bar', ESTATES, [{label:'AKP', data:AKP10, backgroundColor:V('--accent-500'), clickable:true}], {clickEstate:true, legend:false, valueLabel:true, decimals:1});
+  const att = id => mkChart(id,'bar', ESTATES, [
+    {label:'Actual', data:ATT10, backgroundColor:ATT10.map(v=>statusColor(v>=90?'good':v>=89?'warn':'critical')), clickable:true},
+    {type:'line', label:'Target', data:ATT10.map(()=>90), borderColor:V('--ink-600'), borderDash:[5,4], pointRadius:0, borderWidth:1.6, noLabel:true}
+  ], {clickEstate:true, legend:false, min:80, max:100, valueLabel:true, decimals:1});
+  const out = id => mkChart(id,'bar', ESTATES, [
+    {label:'Actual', data:OUT10_ACTUAL, backgroundColor:OUT10_ACTUAL.map((v,i)=>statusColor(OUT10_GAP[i]?'critical':'good')), stack:'s', clickable:true},
+    {label:'Gap to target', data:OUT10_GAP, backgroundColor:V('--accent-200'), stack:'s', noLabel:true}
+  ], {stack:true, clickEstate:true, legend:false});
+
+  pg('m_prod'); pg('m_left'); interval('m_int'); akp('m_akp'); att('m_att'); out('m_out');
+  pg('m_unr'); pg('m_rip'); interval('m_los'); akp('m_akp2'); att('m_att2'); out('m_out2');
+}
+
+function rankTable(title, color){
+  const rows = RANK_ROWS.map((r,i)=>`
+    <tr><td><span class="rank-badge">${i+1}</span></td><td>${r.nik}</td><td>${r.name}</td><td>-</td><td>${fmt(r.final)}</td>
+    <td><span class="fin-bar" style="background:linear-gradient(90deg, ${color} ${(r.final/1851*100).toFixed(0)}%, transparent ${(r.final/1851*100).toFixed(0)}%)">${fmt(r.final)}</span></td></tr>`).join('');
+  return panel(title, `<div class="ow"><table class="rk">
+    <thead><tr><th rowspan="2">Rank</th><th rowspan="2">NIK</th><th rowspan="2">Employee Name</th><th colspan="3">Harvesting Output</th></tr>
+    <tr><th>Mechanical</th><th>Manual</th><th>Final</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`);
+}
+function pageRanking(){
+  $('#col').innerHTML = row(
+    rankTable('Top 5 Harvesters by FFB Output Today', 'var(--surface-tint-strong)') +
+    rankTable('Bottom 5 Harvester Productivity Today', 'var(--critical-bg)'), 0);
+}
+
+/* ============================================================
+   RENDER / INTERACTION
+   ============================================================ */
+function renderContent(){
+  destroyCharts();
+  const titles = {production:'Production', quality:'FFB Quality &amp; Losses', fertilizer:'Fertilizer &amp; Upkeep',
+    comparison: STATE.estate===null ? 'Comparison' : 'Harvester Ranking'};
+  const subs = {production:'FFB production, quality, rotation &amp; attendance', quality:'FFB quality &amp; harvest losses',
+    fertilizer:'Fertilizer application &amp; crop upkeep realisation',
+    comparison: STATE.estate===null ? 'Comparison across estates in area' : 'Best and worst harvesters by estate'};
+
+  const head = `<div class="page-head"><h1>${titles[STATE.tab]}${STATE.estate?' &mdash; '+STATE.estate:''}</h1><span class="period-note">${subs[STATE.tab]}</span></div>`;
+
+  // page-specific functions each assign #col's full innerHTML (rows only, no head)
+  if(STATE.tab==='production') pageProduction();
+  else if(STATE.tab==='quality') pageQuality();
+  else if(STATE.tab==='fertilizer') pageFertilizer();
+  else if(STATE.tab==='comparison') (STATE.estate===null ? pageComparison() : pageRanking());
+
+  $('#col').insertAdjacentHTML('afterbegin', head);
+}
+
+function renderAll(){
+  renderSidebar();
+  renderTopbar();
+  renderContent();
+}
+
+function drillToEstate(name){
+  STATE.estate = name;
+  STATE.tab = 'production';
+  openDropdown = null;
+  renderAll();
+  $('#col').scrollTop = 0;
+}
+function resetSelection(){
+  STATE.estate = null;
+  STATE.region = 'All Region';
+  STATE.area = 'All Area';
+  if(STATE.tab==='comparison'){ /* stays comparison tab key; label auto reverts */ }
+  openDropdown = null;
+  renderAll();
+}
+function clearEstateOnly(){
+  STATE.estate = null;
+  openDropdown = null;
+  renderAll();
+}
+
+/* Delegated interaction wiring (survives full re-renders) */
+document.addEventListener('click', (e)=>{
+  const ddBtn = e.target.closest('.dd-btn');
+  if(ddBtn){ const f = ddBtn.getAttribute('data-dd'); openDropdown = (openDropdown===f) ? null : f; renderSidebar(); return; }
+
+  const ddOpt = e.target.closest('.dd-opt');
+  if(ddOpt){
+    const field = ddOpt.getAttribute('data-field'), val = ddOpt.getAttribute('data-val');
+    if(field==='estate'){ val==='All Estate' ? clearEstateOnly() : drillToEstate(val); return; }
+    if(field==='region') STATE.region = val; else if(field==='area') STATE.area = val;
+    openDropdown = null; renderSidebar(); renderTopbar(); return;
+  }
+
+  const measureBtn = e.target.closest('.mswitch button');
+  if(measureBtn){ STATE.measure = measureBtn.getAttribute('data-measure'); renderAll(); return; }
+
+  const periodBtn = e.target.closest('.period-toggle button');
+  if(periodBtn){ STATE.period = periodBtn.getAttribute('data-period'); renderAll(); return; }
+
+  if(e.target.id==='resetSel'){ resetSelection(); return; }
+
+  const tabBtn = e.target.closest('.tabnav button');
+  if(tabBtn){ STATE.tab = tabBtn.getAttribute('data-tab'); renderAll(); return; }
+
+  const chip = e.target.closest('.chip');
+  if(chip){ drillToEstate(chip.getAttribute('data-estate')); return; }
+
+  // close any open dropdown on outside click
+  if(openDropdown && !e.target.closest('.dd')){ openDropdown = null; renderSidebar(); }
+});
+
+/* viewport fit */
+(function(){
+  const c = document.getElementById('canvas');
+  function fit(){ const s = Math.min(window.innerWidth/1600, window.innerHeight/900); c.style.transform = 'scale(' + s + ')'; }
+  fit(); window.addEventListener('resize', fit);
+})();
+
+renderAll();
+</script>
+</body>
+</html>
