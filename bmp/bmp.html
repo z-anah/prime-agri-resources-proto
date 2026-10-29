@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -36,12 +35,11 @@
     </script>
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Roboto Mono', sans-serif;
             background-color: #d1d5db;
             margin: 0;
             padding: 0;
             overflow: hidden;
-            user-select: none;
         }
 
         .app-viewport {
@@ -1345,46 +1343,78 @@
 
                             </div>
 
-                            <div
-                                class="bg-white rounded-lg p-3 border border-[#006D65] shadow-2xs flex flex-col justify-between mt-2">
-                                <div class="flex items-center space-x-2 mb-2">
-                                    <span
-                                        class="bg-[#00463E] text-white text-[9px] font-black px-2 py-0.5 rounded-full">A&CI</span>
-                                    <h4 class="text-xs font-black text-[#00463E]">BMP Assessment (A&CI Assistant)</h4>
-                                </div>
-                                <div class="grid grid-cols-12 gap-3 items-center">
-                                    <div class="col-span-4 border-r border-[#E2E8F0] pr-2">
-                                        <span class="text-[9px] text-slate-500 block">Block score (Aug)</span>
-                                        <div class="text-2xl font-black text-[#F59E0B] my-0.5">70.0 <span
-                                                class="text-xs font-normal text-slate-400">/ 100</span></div>
-                                        <div class="text-[9px] font-bold text-[#F59E0B] mt-1">Status: Behind</div>
+                            <div class="grid grid-cols-2 gap-3 mt-2">
+                                <div class="bg-white rounded-lg p-3 border border-[#006D65] shadow-2xs flex flex-col justify-between">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <span class="bg-[#00463E] text-white text-[9px] font-black px-2 py-0.5 rounded-full">A&CI</span>
+                                        <h4 class="text-xs font-black text-[#00463E]">BMP Assessment (A&CI Assistant)</h4>
                                     </div>
-                                    <div class="col-span-5 border-r border-[#E2E8F0] pr-2 flex flex-col justify-center">
-                                        <div class="flex justify-between text-[9px] text-slate-500 mb-1">
-                                            <span>Score vs target (90)</span>
+                                    <div class="grid grid-cols-12 gap-3 items-center">
+                                        <div class="col-span-4 border-r border-[#E2E8F0] pr-2">
+                                            <span class="text-[9px] text-slate-500 block">Block score (Aug)</span>
+                                            <div class="text-2xl font-black text-[#F59E0B] my-0.5">{{ aciAssessment.score }} <span class="text-xs font-normal text-slate-400">/ 100</span></div>
+                                            <div class="text-[9px] font-bold text-[#F59E0B] mt-1">Status: {{ aciAssessment.status }}</div>
                                         </div>
-                                        <div class="relative w-full bg-[#D1FAE5] h-3 rounded-full overflow-hidden my-1">
-                                            <div class="absolute top-0 left-0 h-full bg-[#F59E0B] rounded-full"
-                                                style="width: 77.7%;"></div>
-                                            <div class="absolute top-0 bottom-0 w-0.5 bg-black z-10" style="left: 90%;">
+                                        <div class="col-span-5 border-r border-[#E2E8F0] pr-2 flex flex-col justify-center">
+                                            <div class="flex justify-between text-[9px] text-slate-500 mb-1">
+                                                <span>Score vs target ({{ aciAssessment.target }})</span>
+                                            </div>
+                                            <div class="relative w-full bg-[#D1FAE5] h-3 rounded-full overflow-hidden my-1">
+                                                <div class="absolute top-0 left-0 h-full bg-[#F59E0B] rounded-full" :style="{ width: aciAssessment.score + '%' }"></div>
+                                                <div class="absolute top-0 bottom-0 w-0.5 bg-black z-10" :style="{ left: aciAssessment.target + '%' }"></div>
+                                            </div>
+                                            <div class="flex justify-between text-[8px] text-slate-400 px-0.5">
+                                                <span>Last assessment: {{ aciAssessment.lastAssessment }}</span>
+                                                <span class="font-bold text-slate-700">{{ aciAssessment.target }}</span>
+                                            </div>
+                                            <div class="text-[8px] text-slate-500 mt-0.5">Assessor: {{ aciAssessment.assessor }}</div>
+                                        </div>
+                                        <div class="col-span-3 flex flex-col justify-between text-[10px]">
+                                            <div>
+                                                <span class="text-[8px] text-slate-400 block">Weight</span>
+                                                <div class="font-black text-[#00463E]">{{ aciAssessment.weightLabel }}</div>
+                                                <div class="text-[8px] text-slate-500">{{ aciAssessment.weightSub }}</div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <span class="text-[8px] text-slate-400 block">Contribution</span>
+                                                <div class="font-black text-[#00463E]">{{ aciAssessment.contribution }}</div>
                                             </div>
                                         </div>
-                                        <div class="flex justify-between text-[8px] text-slate-400 px-0.5">
-                                            <span>Last assessment: 28 Aug 2026</span>
-                                            <span class="font-bold text-slate-700">90</span>
-                                        </div>
-                                        <div class="text-[8px] text-slate-500 mt-0.5">Assessor: A&CI Assistant</div>
                                     </div>
-                                    <div class="col-span-3 flex flex-col justify-between text-[10px]">
-                                        <div>
-                                            <span class="text-[8px] text-slate-400 block">Weight</span>
-                                            <div class="font-black text-[#00463E]">40% of Crop Mgmt</div>
-                                            <div class="text-[8px] text-slate-500">&approx; 8.4% of final score</div>
-                                        </div>
-                                        <div class="mt-2">
-                                            <span class="text-[8px] text-slate-400 block">Contribution</span>
-                                            <div class="font-black text-[#00463E]">28.0 of 40 pts</div>
-                                        </div>
+                                </div>
+                            
+                                <div class="bg-white rounded-lg p-3 border border-[#006D65] shadow-2xs flex flex-col justify-between">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <span class="bg-[#00463E] text-white text-[9px] font-black px-2 py-0.5 rounded-full">Yield</span>
+                                        <h4 class="text-xs font-black text-[#00463E]">Yield &amp; Rotation (t/ha)</h4>
+                                    </div>
+                                    <div class="border border-[#E2E8F0] rounded overflow-hidden">
+                                        <table class="w-full text-left border-collapse text-[10px]">
+                                            <thead class="bg-[#00463E] text-white">
+                                                <tr>
+                                                    <th class="p-1.5 font-bold w-[40%]">{{ yieldRotation.blockName }}</th>
+                                                    <th class="p-1.5 font-bold text-center">2025</th>
+                                                    <th class="p-1.5 font-bold text-center">2026 YTD</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-[#E2E8F0]">
+                                                <tr>
+                                                    <td class="p-1.5 text-slate-800 font-medium">Yield (t/ha)</td>
+                                                    <td class="p-1.5 text-center text-slate-600">{{ yieldRotation.yield2025 }}</td>
+                                                    <td class="p-1.5 text-center font-black text-[#006D65]">{{ yieldRotation.yield2026 }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="p-1.5 text-slate-800 font-medium">Yield vs budget</td>
+                                                    <td class="p-1.5 text-center text-slate-600">{{ yieldRotation.vsBudget2025 }}</td>
+                                                    <td class="p-1.5 text-center font-black text-[#006D65]">{{ yieldRotation.vsBudget2026 }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="p-1.5 text-slate-800 font-medium">Harvest rounds (plan {{ yieldRotation.planRounds }})</td>
+                                                    <td class="p-1.5 text-center text-slate-600">{{ yieldRotation.rounds2025 }}</td>
+                                                    <td class="p-1.5 text-center font-black text-[#006D65]">{{ yieldRotation.rounds2026 }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -2451,7 +2481,26 @@
                         period: 'MTD',
                         month: 'Aug 2026'
                     },
-
+                    aciAssessment: {
+                        score: 70.0,
+                        target: 90,
+                        status: 'Behind',
+                        lastAssessment: '28 Aug 2026',
+                        assessor: 'A&CI Assistant',
+                        weightLabel: '40% of Crop Mgmt',
+                        weightSub: '≈ 8.4% of final score',
+                        contribution: '28.0 of 40 pts'
+                    },
+                    yieldRotation: {
+                        blockName: 'Block TT 2007',
+                        yield2025: '12.90',
+                        yield2026: '13.84',
+                        vsBudget2025: '78.7%',
+                        vsBudget2026: '84.4%',
+                        planRounds: 24,
+                        rounds2025: 22,
+                        rounds2026: 26
+                    },
                     meta: {
                         lastUpdated: '7 Okt 2026',
                         monthsLoaded: 'Jun · Jul · Aug',
