@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BMP Data & Calculated Fields</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <script src="./cf-data.js"></script>
+  <script src="./join-data.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    body {
+      background-color: #f8fafc;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    /* Design Tokens & Shared Components */
+    .panel {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .field-input {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 10px 14px;
+      background: #ffffff;
+      font-size: 14px;
+      color: #0f172a;
+      outline: none;
+      transition: all 0.15s ease-in-out;
+    }
+
+    .field-input:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #64748b;
+      transition: all 0.15s ease-in-out;
+      cursor: pointer;
+    }
+
+    .btn-icon:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      color: #64748b;
+      transition: all 0.15s ease-in-out;
+    }
+
+    .tab:hover {
+      color: #0f172a;
+    }
+
+    .tab.active {
+      background: #ffffff;
+      color: #0284c7;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Syntax Highlighting for Formulas */
+    .formula {
+      margin: 0;
+      padding: 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 9px;
+      line-height: 1.6;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .sql-keyword {
+      color: #be123c;
+      font-weight: 700;
+    }
+
+    .sql-function {
+      color: #6d28d9;
+      font-weight: 600;
+    }
+
+    .sql-string {
+      color: #0f766e;
+    }
+
+    .sql-field {
+      color: #0369a1;
+    }
+
+    .sql-number {
+      color: #b45309;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    ::selection {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" class="min-h-screen text-slate-800 pb-12">
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+      <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div>
+            <h1 class="text-xl font-bold tracking-tight text-slate-900 leading-none">BMP</h1>
+            <p class="text-xs text-slate-500 mt-1">Data Catalog & Formula Library</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 pt-6 space-y-6">
+      <!-- Stats Banner -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="panel p-5 flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Spreadsheet Rows</p>
+            <span class="material-symbols-outlined text-slate-400 text-xl">table_rows</span>
+          </div>
+          <div class="mt-3">
+            <p class="text-3xl font-bold text-slate-900 tracking-tight">{{ totalRows }}</p>
+            <p class="text-xs text-slate-500 mt-1">Source: <span class="mono text-slate-700">{{ dataSourceName }}</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="panel p-5 flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Source Columns</p>
+            <span class="material-symbols-outlined text-slate-400 text-xl">view_column</span>
+          </div>
+          <div class="mt-3">
+            <p class="text-3xl font-bold text-slate-900 tracking-tight">{{ totalColumns }}</p>
+            <p class="text-xs text-slate-500 mt-1">{{ textCount }} text · {{ decimalCount }} decimal · {{ integerCount
+              }} integer · {{ dateCount }} date</p>
+          </div>
+        </div>
+
+        <div class="panel p-5 flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Calculated Fields</p>
+            <span class="material-symbols-outlined text-slate-400 text-xl">functions</span>
+          </div>
+          <div class="mt-3">
+            <p class="text-3xl font-bold text-slate-900 tracking-tight">{{ cfFields.length }}</p>
+            <p class="text-xs text-slate-500 mt-1">Ready-to-use formulas configured</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Navigation & Content Section -->
+      <section class="panel p-6">
+        <!-- Tabs Navigation Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+          <div class="flex bg-slate-100 p-1 rounded-xl gap-1">
+            <button class="tab" :class="{active: activeTab==='fields'}" @click="activeTab='fields'">
+              <span class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">schema</span>
+                Spreadsheet Fields
+              </span>
+            </button>
+            <button class="tab" :class="{active: activeTab==='geo'}" @click="activeTab='geo'">
+              <span class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">map</span>
+                GeoJSON Structure
+              </span>
+            </button>
+            <button class="tab" :class="{active: activeTab==='cf'}" @click="activeTab='cf'">
+              <span class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">calculate</span>
+                Calculated Fields
+              </span>
+            </button>
+            <button class="tab" :class="{active: activeTab==='joins'}" @click="activeTab='joins'">
+              <span class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">join_inner</span>
+                Data Joins
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab 1: Spreadsheet Fields -->
+        <div v-if="activeTab==='fields'" class="mt-6">
+          <div class="grid md:grid-cols-[1fr_220px] gap-3 mb-4">
+            <input class="field-input" v-model="search" placeholder="Search field by name…">
+            <select class="field-input" v-model="typeFilter">
+              <option value="all">All Data Types</option>
+              <option>Text</option>
+              <option>Integer</option>
+              <option>Decimal</option>
+              <option>Date/time</option>
+            </select>
+          </div>
+
+          <div class="flex items-center justify-between mb-3 px-1">
+            <span class="text-xs font-medium text-slate-500">Showing {{ filteredFields.length }} of {{ fields.length }}
+              fields</span>
+          </div>
+
+          <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+            <div class="max-h-[550px] overflow-auto divide-y divide-slate-100">
+              <div v-for="f in filteredFields" :key="f.name"
+                class="px-5 py-3.5 hover:bg-slate-50/80 flex items-center justify-between gap-4 transition-colors">
+                <div class="flex items-center gap-3 min-w-0">
+                  <span class="mono text-sm font-semibold text-slate-800 break-all">{{ f.name }}</span>
+                  <span class="text-[11px] font-medium rounded-md px-2.5 py-0.5 shrink-0" :class="typeClass(f.type)">{{
+                    f.type }}</span>
+                </div>
+                <button class="btn-icon shrink-0" @click="copyText(f.name, 'Field name copied')"
+                  title="Copy field name">
+                  <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                </button>
+              </div>
+              <div v-if="filteredFields.length===0" class="p-12 text-center text-sm text-slate-500">
+                No fields match your search criteria.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: GeoJSON -->
+        <div v-if="activeTab==='geo'" class="mt-6 grid lg:grid-cols-2 gap-6">
+          <div class="rounded-xl bg-white border border-slate-200 p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-sky-700 text-xs font-bold uppercase tracking-wider">
+                <span class="material-symbols-outlined text-base">alt_route</span>
+                GeoJSON Structure
+              </div>
+              <h3 class="font-bold text-lg text-slate-900 mt-2">FeatureCollection → Feature → Polygon</h3>
+              <p class="text-sm text-slate-600 leading-relaxed mt-2">
+                The file stores geographic features. Each feature combines properties (business identifiers) with
+                geometry (coordinates that define a land-use boundary).
+              </p>
+
+              <div class="mt-5 space-y-2">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Available Properties</p>
+                <div v-for="item in geoFields" :key="item.name"
+                  class="bg-slate-50 border border-slate-200 rounded-lg p-3 flex items-center justify-between gap-3">
+                  <span class="mono text-sm font-semibold text-slate-700">{{ item.name }}</span>
+                  <button class="btn-icon" @click="copyText(item.name, item.name + ' copied')"
+                    title="Copy property name">
+                    <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-xl bg-slate-900 text-slate-100 p-5 flex flex-col justify-between border border-slate-800">
+            <div>
+              <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <p class="text-xs uppercase tracking-wider text-slate-400 font-bold flex items-center gap-2">
+                  <span class="material-symbols-outlined text-base text-sky-400">code</span>
+                  Example Feature Schema
+                </p>
+                <button
+                  class="btn-icon bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700"
+                  @click="copyText(geoExample, 'GeoJSON example copied')" title="Copy JSON">
+                  <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                </button>
+              </div>
+              <pre
+                class="mono text-[9px] leading-relaxed mt-4 text-slate-300 overflow-auto max-h-[380px]">{{ geoExample }}</pre>
+            </div>
+            <p class="text-xs text-slate-400 mt-4 pt-3 border-t border-slate-800/80">
+              Coordinates appear as [longitude, latitude, elevation]. Confirm coordinate reference system (CRS) and
+              units before rendering on a map canvas.
+            </p>
+          </div>
+        </div>
+
+        <!-- Tab 3: Calculated Field Library -->
+        <div v-if="activeTab==='cf'" class="mt-6 space-y-4">
+          <input class="field-input" v-model="cfQuery" placeholder="Search formula by title…" aria-label="Search title"
+            autocomplete="off">
+
+          <div v-if="filteredCf.length" class="space-y-4">
+            <article v-for="field in filteredCf" :key="field.title"
+              class="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
+              <div class="flex items-center justify-between gap-4">
+                <h2 class="font-semibold text-slate-900 text-base min-w-0 break-words flex items-center gap-2">
+                  <span class="material-symbols-outlined text-slate-400 text-lg">functions</span>
+                  {{ field.title }}
+                </h2>
+                <button class="btn-icon shrink-0" @click="copyText(field.title, 'Title copied')" title="Copy title">
+                  <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                </button>
+              </div>
+
+              <div class="relative group">
+                <pre class="formula"><code v-html="highlightSql(field.formula)"></code></pre>
+                <button class="btn-icon absolute top-3 right-3 bg-white shadow-sm hover:bg-slate-50"
+                  @click="copyText(field.formula, 'Formula copied')" title="Copy formula">
+                  <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                </button>
+              </div>
+            </article>
+          </div>
+          <div v-else class="rounded-xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500">
+            No matching calculated fields found.
+          </div>
+        </div>
+
+        <!-- Tab 4: Data Joins -->
+        <div v-if="activeTab==='joins'" class="mt-6 space-y-4">
+          <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Active Table Joins & Relations
+              </span>
+              <span class="text-xs font-medium text-slate-500">{{ joins.length }} relationship(s) configured</span>
+            </div>
+            
+            <div class="divide-y divide-slate-100">
+              <div v-for="(j, idx) in joins" :key="idx" class="p-6 space-y-4 hover:bg-slate-50/50 transition-colors">
+                
+                <!-- Header: DataSource Target & Joined Tables -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div class="space-y-1">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-md border border-sky-200/60">
+                      DataSource Target
+                    </span>
+                    <p class="mono text-sm font-semibold text-slate-900 mt-1">{{ j.dataSource }}</p>
+                  </div>
+        
+                  <!-- Displaying 'tables' list -->
+                  <div v-if="j.tables && j.tables.length" class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-xs font-medium text-slate-500 mr-1">Joined Tables:</span>
+                    <span 
+                      v-for="(table, tIdx) in j.tables" 
+                      :key="tIdx" 
+                      class="mono text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 px-2 py-1 rounded-md"
+                    >
+                      {{ table }}
+                    </span>
+                  </div>
+                </div>
+        
+                <!-- Join Condition Box (Left Field, Operator, Right Field) -->
+                <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-4 bg-slate-50 border border-slate-200/80 rounded-xl p-4">
+                  
+                  <!-- Left Field -->
+                  <div class="space-y-1">
+                    <span class="text-xs font-medium text-slate-500">Spreadsheet Left Field</span>
+                    <div class="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-3 py-2">
+                      <span class="mono text-sm font-semibold text-slate-800">{{ j.leftField }}</span>
+                      <button class="btn-icon" @click="copyText(j.leftField, 'Left field copied')" title="Copy field">
+                        <span class="material-symbols-outlined text-[16px]">content_copy</span>
+                      </button>
+                    </div>
+                  </div>
+        
+                  <!-- Operator -->
+                  <div class="flex justify-center">
+                    <span class="w-10 h-10 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center mono font-bold text-sky-600 text-base">
+                      {{ j.operator }}
+                    </span>
+                  </div>
+        
+                  <!-- Right Field -->
+                  <div class="space-y-1">
+                    <span class="text-xs font-medium text-slate-500">GeoJSON Right Field</span>
+                    <div class="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-3 py-2">
+                      <span class="mono text-sm font-semibold text-slate-800">{{ j.rightField }}</span>
+                      <button class="btn-icon" @click="copyText(j.rightField, 'Right field copied')" title="Copy field">
+                        <span class="material-symbols-outlined text-[16px]">content_copy</span>
+                      </button>
+                    </div>
+                  </div>
+        
+                </div>
+              </div>
+        
+              <!-- Empty State -->
+              <div v-if="joins.length === 0" class="p-12 text-center text-sm text-slate-500">
+                No data joins configured.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Global Toast Notification -->
+      <transition name="fade">
+        <div v-if="toast"
+          class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white rounded-xl px-4 py-3 shadow-xl text-sm flex items-center gap-2.5 z-50 border border-slate-800">
+          <span class="material-symbols-outlined text-emerald-400 text-lg">check_circle</span>
+          <span class="font-medium">{{ toast }}</span>
+        </div>
+      </transition>
+    </main>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+    createApp({
+      data() {
+        const fields = [
+          ['Jenis_Data', 'Text'],
+          ['Tanggal', 'Date/time'],
+          ['Tahun', 'Integer'],
+          ['Periode', 'Integer'],
+          ['Kode_PT', 'Text'],
+          ['Kode_Estate', 'Text'],
+          ['Nama_Estate', 'Text'],
+          ['Kode_Divisi', 'Text'],
+          ['Kode_Blok', 'Text'],
+          ['Kode_Area', 'Text'],
+          ['Status_Tanaman', 'Text'],
+          ['Nomor_Dokumen', 'Text'],
+          ['Nomor_Baris', 'Integer'],
+          ['Kode_Aktivitas', 'Text'],
+          ['Nama_Aktivitas', 'Text'],
+          ['UOMSCHDL_Aktivitas', 'Text'],
+          ['Satuan_Aktivitas', 'Text'],
+          ['Output_Kerja', 'Decimal'],
+          ['HK', 'Decimal'],
+          ['HK_Spv', 'Decimal'],
+          ['Total_HK', 'Decimal'],
+          ['Kode_Bahan', 'Text'],
+          ['Nama_Bahan', 'Text'],
+          ['Satuan_Bahan', 'Text'],
+          ['Quantity_Bahan', 'Decimal'],
+          ['Qty_Base_Bahan', 'Decimal'],
+          ['Qty_Trx_Bahan', 'Decimal'],
+          ['Nomor_Urut_Bahan', 'Decimal'],
+          ['Nomor_Sequence_Bahan', 'Decimal'],
+          ['Kode_Budget', 'Text'],
+          ['Target_Luas_Bulanan_Ha', 'Decimal'],
+          ['Budget_Bulanan_Amount', 'Decimal'],
+          ['Flag_Void', 'Decimal'],
+          ['Nomor_Revisi', 'Decimal'],
+          ['Status_Data', 'Text'],
+          ['Sumber_Tabel', 'Text'],
+          ['Source_Row_ID', 'Integer'],
+          ['Source_Update_Date', 'Date/time']
+        ].map(([name, type]) => ({ name, type }));
+
+        return {
+          joins: typeof JOINS !== 'undefined' ? JOINS : [],
+          activeTab: 'fields',
+          search: '',
+          typeFilter: 'all',
+          fields,
+          toast: '',
+          toastTimer: null,
+          cfQuery: '',
+          totalRows: "132,317",
+          dataSourceName: "Data_BMP_demo.xlsx",
+          totalColumns: "38",
+          textCount: "19",
+          decimalCount: "13",
+          integerCount: "4",
+          dateCount: "2",
+          cfFields: typeof INITIAL_FIELDS !== 'undefined' ? INITIAL_FIELDS : [],
+          geoFields: [
+            { name: 'REGION' },
+            { name: 'AREA' },
+            { name: 'N_ESTATE' },
+            { name: 'DIVISI' },
+            { name: 'NO_BLOK' },
+            { name: 'geometry' }
+          ],
+          geoExample: JSON.stringify({
+            type: 'Feature',
+            properties: { REGION: 'KALIMANTAN 2', AREA: 'KAL 4', N_ESTATE: 'GTE', DIVISI: 'GTE06', NO_BLOK: 'IE0010' },
+            geometry: {
+              type: 'Polygon',
+              coordinates: [[[109.593620869, 0.618563742, 0]]]
+            }
+          }, null, 2)
+        };
+      },
+      computed: {
+        filteredFields() {
+          const q = this.search.toLowerCase().trim();
+          return this.fields.filter(f =>
+            (this.typeFilter === 'all' || f.type === this.typeFilter) &&
+            (!q || (f.name + ' ' + f.type).toLowerCase().includes(q))
+          );
+        },
+        filteredCf() {
+          const q = this.cfQuery.trim().toLowerCase();
+          return this.cfFields.filter(field => field.title.toLowerCase().includes(q));
+        }
+      },
+      methods: {
+        typeClass(type) {
+          return {
+            'Text': 'bg-sky-50 text-sky-700 border border-sky-200/60',
+            'Integer': 'bg-purple-50 text-purple-700 border border-purple-200/60',
+            'Decimal': 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
+            'Date/time': 'bg-amber-50 text-amber-700 border border-amber-200/60'
+          }[type] || 'bg-slate-100 text-slate-600 border border-slate-200';
+        },
+        highlightSql(value) {
+          if (!value) return '';
+          const escaped = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const tokens = /(\b(?:SUM|IF|THEN|ELSEIF|ELSE|END|ZN|LOOKUP|CONTAINS|AND|OR)\b|"[^"]*"|'[^']*'|\[[^\]]+\]|\b\d+(?:\.\d+)?\b)/gi;
+          return escaped.replace(tokens, token => {
+            if (/^"|^'/.test(token)) return `<span class="sql-string">${token}</span>`;
+            if (/^\[/.test(token)) return `<span class="sql-field">${token}</span>`;
+            if (/^\d/.test(token)) return `<span class="sql-number">${token}</span>`;
+            if (/^(SUM|IF|THEN|ELSEIF|ELSE|END|AND|OR)\b/i.test(token)) return `<span class="sql-keyword">${token}</span>`;
+            return `<span class="sql-function">${token}</span>`;
+          });
+        },
+        async copyText(value, message) {
+          try {
+            await navigator.clipboard.writeText(String(value));
+          } catch (error) {
+            const area = document.createElement('textarea');
+            area.value = String(value);
+            area.style.position = 'fixed';
+            area.style.opacity = '0';
+            document.body.appendChild(area);
+            area.select();
+            document.execCommand('copy');
+            area.remove();
+          }
+          this.toast = message;
+          clearTimeout(this.toastTimer);
+          this.toastTimer = setTimeout(() => this.toast = '', 1800);
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+
+</html>

@@ -856,13 +856,13 @@
                     chartInstances: {},
                     periodeInterval: 'Monthly',
                     metrics: [
-                        { id: 1, label: 'Jam process', value: '8 h / 1 Day', icon: 'clock' },
-                        { id: 2, label: 'Throughput', badge: '45 tph', budget: '45 tph', icon: 'settings' },
-                        { id: 3, label: 'Mill Utilization', value: '25.7 %', icon: 'bar-chart-2' },
-                        { id: 4, label: 'Breakdown', badge: '0%', budget: '0,5%', icon: 'wrench' },
-                        { id: 5, label: 'Oil Losses', badge: '1,27 %', budget: '1,36 %', icon: 'droplet' },
-                        { id: 6, label: 'Kernel Losses', badge: '0,24 %', budget: '0,35 %', icon: 'search' },
-                        { id: 7, label: 'Curah Hujan', value: '10 mm / 1 Day', icon: 'zap' },
+                        { id: 1, label: 'Operating Hours', value: '315 h', icon: 'clock' },
+                        { id: 2, label: 'Throughput', badge: '33 tph', budget: '0 tph', icon: 'settings' },
+                        { id: 3, label: 'Mill Utilization', value: '70,42%', icon: 'bar-chart-2' },
+                        { id: 4, label: 'Breakdown', badge: '0,65%', budget: '0,50 %', icon: 'wrench' },
+                        { id: 5, label: 'Oil Losses', badge: '1,25 %', budget: '1,36 %', icon: 'droplet' },
+                        { id: 6, label: 'Kernel Losses', badge: '0,29 %', budget: '1,36 %', icon: 'search' },
+                        { id: 7, label: 'Rain Fall', value: '23 mm / 27 D', icon: 'zap' },
                     ],
                     tanks: [
                         { id: 'gaugeTank1', volume: 140, ffa: 3.49 },
@@ -905,15 +905,15 @@
                     if (this.currentPage === 'PRODUCTION') {
                         this.initDoughnut();
                         const labels = Array.from({ length: 26 }, (_, i) => `${String(i + 1).padStart(2, '0')}/09/26`);
-                        const oerData = [19.2, 19.6, 19.1, 18.9, 18.3, null, 18.9, 18.5, 19.0, 19.2, 19.0, 19.0, null, 19.2, 19.0, 19.8, 19.6, 20.7, null, 20.6, 21.1, 21.6, 21.7, 21.4, 21.8, 22.0];
-                        const kerData = [6.02, 5.80, 5.88, 5.62, 6.51, null, 6.18, 6.25, 5.92, 6.22, 5.85, 6.28, null, 6.35, 6.55, 5.85, 6.32, 5.98, 6.42, null, 6.70, 6.28, 6.48, 6.55, 6.28, 6.30];
-                        const oilLossData = [1.18, 1.22, 1.25, 1.12, 1.14, null, 1.21, 1.12, 1.24, 1.22, 1.28, null, null, 1.19, 1.24, 1.21, 1.14, 1.13, 1.22, null, 1.15, 1.16, 1.15, 1.24, 1.12, 1.10];
-                        const kernelLossData = [0.22, 0.20, 0.23, 0.25, 0.24, null, 0.20, 0.28, 0.32, 0.35, null, null, 0.21, 0.28, 0.30, 0.27, 0.24, 0.25, 0.25, null, 0.24, 0.24, 0.22, 0.20, 0.23, 0.21];
+                        const oerData = [24.1, 23.6, 24.1, null, 22.9, 25.0, 24.8, 24.3, 24.5, 24.6, 25.1, 25.2, 25.1, 25.0, 25.2, 26.4, 24.3, null, 24.1, 25.7, 24.3, 25.5, 23.6, 25.1, null, 25.0, 25.3];
+                        const kerData = [4.0, 5.7, 5.3, null, 8.1, 3.2, 6.5, 4.6, 5.8, 4.8, 2.2, 4.5, 4.2, 3.8, 3.2, 3.0, 3.6, null, 5.5, 3.1, 3.3, 4.5, 4.5, 4.0, 4.0, 3.3, 3.6];
+                        const oilLossData = [1.23, 1.19, 1.33, null, 1.29, 1.25, 1.16, 1.03, 1.25, 1.12, 1.14, 1.35, 1.23, 1.59, 1.18, 1.27, 1.27, null, 1.10, 1.20, 1.25, 1.31, 1.22, 1.48, null, 1.33, 1.26];
+                        const kernelLossData = [0.19, 0.23, 0.21, null, 0.57, 0.35, 0.10, 0.18, 0.39, 0.19, 0.30, 0.22, 0.21, 0.62, 0.44, 0.24, 0.40, null, 0.21, 0.32, 0.25, 0.19, 0.23, 0.25, null, 0.40, 0.20];
 
-                        this.initCustomChart('chartOER', labels, oerData, 20.22, 17.0, 24.0, 1.0);
-                        this.initCustomChart('chartKER', labels, kerData, 5.75, 5.0, 7.5, 0.5);
-                        this.initCustomChart('chartOilLosses', labels, oilLossData, 1.36, 1.00, 1.50, 0.05);
-                        this.initCustomChart('chartKernelLosses', labels, kernelLossData, 0.40, 0.10, 0.50, 0.05);
+                        this.initCustomChart('chartOER', labels, oerData, 25.20, 22.0, 27.0, 1.0);
+                        this.initCustomChart('chartKER', labels, kerData, 4.00, 1.0, 9.0, 2.0);
+                        this.initCustomChart('chartOilLosses', labels, oilLossData, 1.36, 1.00, 1.70, 0.2);
+                        this.initCustomChart('chartKernelLosses', labels, kernelLossData, 0.35, 0.0, 0.70, 0.2);
                     } else if (this.currentPage === 'QUALITY') {
                         const monthlyLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept'];
                         const looseFruitMonthly = [2.2, 5.1, 2.8, 1.9, 2.7, 0.8, 2.1, 3.0, 2.2];
